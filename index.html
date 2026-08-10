@@ -920,6 +920,19 @@
 
         let currentObjectURL = null;
 
+        let isConnecting = false;
+
+
+        /*
+        ------------------------------------------------------------
+        3b. TOKEN STORAGE KEYS (localStorage persistence)
+        ------------------------------------------------------------
+        */
+
+        const TOKEN_STORAGE_KEY = "mehfil_drive_token";
+
+        const TOKEN_EXPIRY_KEY = "mehfil_drive_token_expiry";
+
 
         /*
         ------------------------------------------------------------
@@ -1014,6 +1027,10 @@
                     callback:
                         async function(response) {
 
+                            isConnecting =
+                                false;
+
+
                             if (response.error) {
 
                                 console.error(
@@ -1021,8 +1038,9 @@
                                     response
                                 );
 
-                                driveMessage.textContent =
-                                    "Google authorization failed.";
+                                setDisconnectedState(
+                                    "Could not connect to Google Drive. Please try again."
+                                );
 
                                 return;
                             }
@@ -1030,6 +1048,47 @@
 
                             accessToken =
                                 response.access_token;
+
+
+                            /*
+                            Persist token + expiry so the session
+                            survives a page refresh.
+                            */
+
+                            try {
+
+                                const expiresInMs =
+                                    (response.expires_in || 3600) * 1000;
+
+                                const expiryTimestamp =
+                                    Date.now() + expiresInMs;
+
+                                localStorage.setItem(
+                                    TOKEN_STORAGE_KEY,
+                                    accessToken
+                                );
+
+                                localStorage.setItem(
+                                    TOKEN_EXPIRY_KEY,
+                                    String(expiryTimestamp)
+                                );
+
+                            }
+
+                            catch (storageError) {
+
+                                /*
+                                localStorage may be unavailable
+                                (private browsing, etc). Connection
+                                still works for this session.
+                                */
+
+                                console.warn(
+                                    "Could not persist Drive token:",
+                                    storageError
+                                );
+
+                            }
 
 
                             setConnectedState();
@@ -1040,6 +1099,102 @@
                         }
 
                 });
+
+
+            /*
+            Attempt to silently restore a previous session
+            (e.g. after a page refresh) using a saved,
+            still-valid access token.
+            */
+
+            restoreSavedSession();
+
+        }
+
+
+        /*
+        ------------------------------------------------------------
+        5b. RESTORE SAVED SESSION FROM LOCALSTORAGE
+        ------------------------------------------------------------
+        */
+
+        async function restoreSavedSession() {
+
+            let savedToken = null;
+
+            let savedExpiry = null;
+
+
+            try {
+
+                savedToken =
+                    localStorage.getItem(TOKEN_STORAGE_KEY);
+
+                savedExpiry =
+                    localStorage.getItem(TOKEN_EXPIRY_KEY);
+
+            }
+
+            catch (storageError) {
+
+                return;
+
+            }
+
+
+            if (!savedToken || !savedExpiry) {
+
+                return;
+
+            }
+
+
+            const stillValid =
+                Date.now() < Number(savedExpiry);
+
+
+            if (!stillValid) {
+
+                clearSavedSession();
+
+                return;
+
+            }
+
+
+            accessToken =
+                savedToken;
+
+
+            setConnectedState();
+
+
+            await loadDriveMusic();
+
+        }
+
+
+        /*
+        ------------------------------------------------------------
+        5c. CLEAR SAVED SESSION
+        ------------------------------------------------------------
+        */
+
+        function clearSavedSession() {
+
+            try {
+
+                localStorage.removeItem(TOKEN_STORAGE_KEY);
+
+                localStorage.removeItem(TOKEN_EXPIRY_KEY);
+
+            }
+
+            catch (storageError) {
+
+                /* Ignore */
+
+            }
 
         }
 
@@ -1052,6 +1207,13 @@
 
         function connectGoogleDrive() {
 
+            if (isConnecting) {
+
+                return;
+
+            }
+
+
             if (!tokenClient) {
 
                 driveMessage.textContent =
@@ -1063,8 +1225,19 @@
             }
 
 
+            isConnecting =
+                true;
+
+
+            driveLogin.textContent =
+                "CONNECTING…";
+
+
             tokenClient.requestAccessToken({
-                prompt: "consent"
+                prompt:
+                    accessToken
+                        ? ""
+                        : "consent"
             });
 
         }
@@ -1086,10 +1259,45 @@
                 "CONNECTED";
 
             driveLogin.textContent =
-                "REFRESH DRIVE";
+                "GOOGLE DRIVE ↗";
 
             driveMessage.textContent =
                 "Google Drive connected. Loading audio files...";
+
+        }
+
+
+        /*
+        ------------------------------------------------------------
+        7b. DISCONNECTED UI
+        ------------------------------------------------------------
+        */
+
+        function setDisconnectedState(message) {
+
+            status.classList.add(
+                "disconnected"
+            );
+
+            statusText.textContent =
+                "OFFLINE";
+
+            driveLogin.textContent =
+                "GOOGLE DRIVE ↗";
+
+            accessToken =
+                null;
+
+
+            clearSavedSession();
+
+
+            if (message) {
+
+                driveMessage.textContent =
+                    message;
+
+            }
 
         }
 
@@ -1151,6 +1359,20 @@
                         errorText
                     );
 
+                    if (
+                        response.status === 401 ||
+                        response.status === 403
+                    ) {
+
+                        setDisconnectedState(
+                            "Your Google Drive session expired. Please reconnect."
+                        );
+
+                        return;
+
+                    }
+
+
                     throw new Error(
                         "Drive API request failed"
                     );
@@ -1162,7 +1384,16 @@
 
 
                 const driveFiles =
-                    data.files || [];
+                    (data.files || []).filter(
+                        function(file) {
+
+                            return (
+                                file.mimeType &&
+                                file.mimeType.indexOf("audio/") === 0
+                            );
+
+                        }
+                    );
 
 
                 if (driveFiles.length === 0) {
@@ -1172,7 +1403,7 @@
                     renderPlaylist();
 
                     driveMessage.textContent =
-                        "No audio files found in your Google Drive.";
+                        "No music found in Google Drive.";
 
                     return;
                 }
@@ -1185,3 +1416,1103 @@
                 songs =
                     driveFiles.map(
                         function(file) {
+
+                            return {
+
+                                id:
+                                    file.id,
+
+                                title:
+                                    cleanFileName(
+                                        file.name
+                                    ),
+
+                                artist:
+                                    "Google Drive",
+
+                                mimeType:
+                                    file.mimeType,
+
+                                size:
+                                    file.size || 0,
+
+                                duration:
+                                    "00:00",
+
+                                source:
+                                    "drive"
+
+                            };
+
+                        }
+                    );
+
+
+                renderPlaylist();
+
+
+                driveMessage.textContent =
+                    songs.length +
+                    " audio file(s) found in Google Drive.";
+
+
+                /*
+                Automatically select first song
+                */
+
+                if (songs.length > 0) {
+
+                    loadSong(0);
+
+                }
+
+            }
+
+            catch (error) {
+
+                console.error(error);
+
+                driveMessage.textContent =
+                    "Could not load Google Drive music. Check your Drive permission.";
+
+            }
+
+        }
+
+
+        /*
+        ------------------------------------------------------------
+        9. CLEAN FILE NAME
+        ------------------------------------------------------------
+        */
+
+        function cleanFileName(filename) {
+
+            return filename
+                .replace(/\.[^/.]+$/, "")
+                .replace(/[_-]+/g, " ")
+                .trim();
+
+        }
+
+
+        /*
+        ------------------------------------------------------------
+        10. RENDER PLAYLIST
+        ------------------------------------------------------------
+        */
+
+        function renderPlaylist() {
+
+            playlist.innerHTML = "";
+
+
+            trackCount.textContent =
+                songs.length +
+                (songs.length === 1
+                    ? " TRACK"
+                    : " TRACKS");
+
+
+            if (songs.length === 0) {
+
+                playlist.innerHTML = `
+
+                    <div class="placeholder-row">
+                        No music available.
+                    </div>
+
+                `;
+
+                return;
+            }
+
+
+            songs.forEach(
+                function(song, index) {
+
+                    const track =
+                        document.createElement(
+                            "div"
+                        );
+
+
+                    track.className =
+                        "track";
+
+
+                    track.dataset.index =
+                        index;
+
+
+                    track.onclick =
+                        function() {
+
+                            selectSong(index);
+
+                        };
+
+
+                    track.innerHTML = `
+
+                        <div class="track-number">
+                            ${String(index + 1).padStart(2, "0")}
+                        </div>
+
+                        <div>
+
+                            <div class="track-name">
+                                ${escapeHTML(song.title)}
+                            </div>
+
+                            <div class="track-artist">
+                                ${escapeHTML(song.artist)}
+                            </div>
+
+                        </div>
+
+                        <div
+                            class="track-time"
+                            id="track-time-${index}"
+                        >
+                            ${song.duration}
+                        </div>
+
+                    `;
+
+
+                    playlist.appendChild(
+                        track
+                    );
+
+                }
+            );
+
+        }
+
+
+        /*
+        ------------------------------------------------------------
+        11. HTML ESCAPE
+        ------------------------------------------------------------
+        */
+
+        function escapeHTML(text) {
+
+            const div =
+                document.createElement(
+                    "div"
+                );
+
+            div.textContent =
+                text;
+
+            return div.innerHTML;
+
+        }
+
+
+        /*
+        ------------------------------------------------------------
+        12. LOAD SONG
+        ------------------------------------------------------------
+        */
+
+        async function loadSong(index) {
+
+            if (
+                !songs.length ||
+                !songs[index]
+            ) {
+
+                return;
+
+            }
+
+
+            /*
+            Stop previous audio
+            */
+
+            audio.pause();
+
+
+            /*
+            Remove previous object URL
+            */
+
+            if (currentObjectURL) {
+
+                URL.revokeObjectURL(
+                    currentObjectURL
+                );
+
+                currentObjectURL =
+                    null;
+
+            }
+
+
+            currentSong =
+                index;
+
+
+            const song =
+                songs[currentSong];
+
+
+            /*
+            Update UI
+            */
+
+            title.textContent =
+                song.title;
+
+            artist.textContent =
+                song.artist;
+
+            bottomTitle.textContent =
+                song.title;
+
+            bottomArtist.textContent =
+                song.artist;
+
+
+            currentTime.textContent =
+                "00:00";
+
+
+            duration.textContent =
+                song.duration || "00:00";
+
+
+            progressFill.style.width =
+                "0%";
+
+
+            isPlaying =
+                false;
+
+
+            updatePlayButtons();
+
+
+            highlightCurrentTrack();
+
+
+            /*
+            Drive audio
+            */
+
+            if (song.source === "drive") {
+
+                await loadDriveAudio(song);
+
+            }
+
+
+            /*
+            Local audio
+            */
+
+            else if (song.source === "local") {
+
+                audio.src =
+                    song.url;
+
+                audio.load();
+
+                try {
+
+                    await audio.play();
+
+                    isPlaying =
+                        true;
+
+                    updatePlayButtons();
+
+                }
+
+                catch (error) {
+
+                    console.log(
+                        "Browser waiting for play:",
+                        error
+                    );
+
+                }
+
+            }
+
+        }
+
+
+        /*
+        ------------------------------------------------------------
+        13. LOAD DRIVE AUDIO
+        ------------------------------------------------------------
+        */
+
+        async function loadDriveAudio(song) {
+
+            try {
+
+                driveMessage.textContent =
+                    "Loading: " +
+                    song.title;
+
+
+                const url =
+                    "https://www.googleapis.com/drive/v3/files/" +
+                    encodeURIComponent(song.id) +
+                    "?alt=media";
+
+
+                const response =
+                    await fetch(
+                        url,
+                        {
+                            method: "GET",
+
+                            headers: {
+                                Authorization:
+                                    "Bearer " +
+                                    accessToken
+                            }
+                        }
+                    );
+
+
+                if (!response.ok) {
+
+                    if (
+                        response.status === 401 ||
+                        response.status === 403
+                    ) {
+
+                        setDisconnectedState(
+                            "Your Google Drive session expired. Please reconnect."
+                        );
+
+                        return;
+
+                    }
+
+
+                    throw new Error(
+                        "Audio download failed"
+                    );
+
+                }
+
+
+                const blob =
+                    await response.blob();
+
+
+                currentObjectURL =
+                    URL.createObjectURL(
+                        blob
+                    );
+
+
+                audio.src =
+                    currentObjectURL;
+
+
+                audio.load();
+
+
+                /*
+                Automatically play
+                */
+
+                try {
+
+                    await audio.play();
+
+                    isPlaying =
+                        true;
+
+                    updatePlayButtons();
+
+                }
+
+                catch (error) {
+
+                    /*
+                    Browser may block autoplay.
+                    User can press play.
+                    */
+
+                    isPlaying =
+                        false;
+
+                    updatePlayButtons();
+
+                }
+
+
+                driveMessage.textContent =
+                    "Playing from Google Drive";
+
+
+            }
+
+            catch (error) {
+
+                console.error(
+                    "Drive audio error:",
+                    error
+                );
+
+                driveMessage.textContent =
+                    "Unable to play this Drive file.";
+
+            }
+
+        }
+
+
+        /*
+        ------------------------------------------------------------
+        14. PLAY / PAUSE
+        ------------------------------------------------------------
+        */
+
+        function togglePlay() {
+
+            if (!audio.src) {
+
+                if (songs.length > 0) {
+
+                    loadSong(
+                        currentSong
+                    );
+
+                }
+
+                return;
+
+            }
+
+
+            if (isPlaying) {
+
+                audio.pause();
+
+                isPlaying =
+                    false;
+
+            }
+
+            else {
+
+                audio.play()
+                    .then(
+                        function() {
+
+                            isPlaying =
+                                true;
+
+                            updatePlayButtons();
+
+                        }
+                    )
+                    .catch(
+                        function(error) {
+
+                            console.error(
+                                error
+                            );
+
+                        }
+                    );
+
+            }
+
+
+            updatePlayButtons();
+
+        }
+
+
+        /*
+        ------------------------------------------------------------
+        15. PLAY BUTTON UI
+        ------------------------------------------------------------
+        */
+
+        function updatePlayButtons() {
+
+            const symbol =
+                isPlaying
+                    ? "Ⅱ"
+                    : "▶";
+
+
+            playButton.textContent =
+                symbol;
+
+            bottomPlay.textContent =
+                symbol;
+
+        }
+
+
+        /*
+        ------------------------------------------------------------
+        16. NEXT SONG
+        ------------------------------------------------------------
+        */
+
+        function nextSong() {
+
+            if (!songs.length) {
+                return;
+            }
+
+
+            currentSong++;
+
+
+            if (
+                currentSong >=
+                songs.length
+            ) {
+
+                currentSong = 0;
+
+            }
+
+
+            loadSong(
+                currentSong
+            );
+
+        }
+
+
+        /*
+        ------------------------------------------------------------
+        17. PREVIOUS SONG
+        ------------------------------------------------------------
+        */
+
+        function previousSong() {
+
+            if (!songs.length) {
+                return;
+            }
+
+
+            currentSong--;
+
+
+            if (currentSong < 0) {
+
+                currentSong =
+                    songs.length - 1;
+
+            }
+
+
+            loadSong(
+                currentSong
+            );
+
+        }
+
+
+        /*
+        ------------------------------------------------------------
+        18. SELECT SONG
+        ------------------------------------------------------------
+        */
+
+        function selectSong(index) {
+
+            loadSong(
+                index
+            );
+
+        }
+
+
+        /*
+        ------------------------------------------------------------
+        19. HIGHLIGHT CURRENT SONG
+        ------------------------------------------------------------
+        */
+
+        function highlightCurrentTrack() {
+
+            const tracks =
+                document.querySelectorAll(
+                    ".track"
+                );
+
+
+            tracks.forEach(
+                function(track) {
+
+                    track.classList.remove(
+                        "active"
+                    );
+
+                }
+            );
+
+
+            const current =
+                document.querySelector(
+                    `.track[data-index="${currentSong}"]`
+                );
+
+
+            if (current) {
+
+                current.classList.add(
+                    "active"
+                );
+
+            }
+
+        }
+
+
+        /*
+        ------------------------------------------------------------
+        20. AUDIO TIME UPDATE
+        ------------------------------------------------------------
+        */
+
+        audio.addEventListener(
+            "timeupdate",
+            function() {
+
+                if (!audio.duration) {
+                    return;
+                }
+
+
+                const percent =
+                    (
+                        audio.currentTime /
+                        audio.duration
+                    ) * 100;
+
+
+                progressFill.style.width =
+                    percent + "%";
+
+
+                const minutes =
+                    Math.floor(
+                        audio.currentTime /
+                        60
+                    );
+
+
+                const seconds =
+                    Math.floor(
+                        audio.currentTime %
+                        60
+                    );
+
+
+                currentTime.textContent =
+                    String(minutes).padStart(
+                        2,
+                        "0"
+                    ) +
+                    ":" +
+                    String(seconds).padStart(
+                        2,
+                        "0"
+                    );
+
+            }
+        );
+
+
+        /*
+        ------------------------------------------------------------
+        21. AUDIO METADATA
+        ------------------------------------------------------------
+        */
+
+        audio.addEventListener(
+            "loadedmetadata",
+            function() {
+
+                if (!audio.duration) {
+                    return;
+                }
+
+
+                const minutes =
+                    Math.floor(
+                        audio.duration /
+                        60
+                    );
+
+
+                const seconds =
+                    Math.floor(
+                        audio.duration %
+                        60
+                    );
+
+
+                const formatted =
+                    String(minutes).padStart(
+                        2,
+                        "0"
+                    ) +
+                    ":" +
+                    String(seconds).padStart(
+                        2,
+                        "0"
+                    );
+
+
+                duration.textContent =
+                    formatted;
+
+
+                if (songs[currentSong]) {
+
+                    songs[currentSong].duration =
+                        formatted;
+
+                }
+
+
+                const trackTime =
+                    document.getElementById(
+                        "track-time-" +
+                        currentSong
+                    );
+
+
+                if (trackTime) {
+
+                    trackTime.textContent =
+                        formatted;
+
+                }
+
+            }
+        );
+
+
+        /*
+        ------------------------------------------------------------
+        22. SONG ENDED
+        ------------------------------------------------------------
+        */
+
+        audio.addEventListener(
+            "ended",
+            function() {
+
+                isPlaying =
+                    false;
+
+                updatePlayButtons();
+
+                nextSong();
+
+            }
+        );
+
+
+        /*
+        ------------------------------------------------------------
+        23. PROGRESS BAR SEEK
+        ------------------------------------------------------------
+        */
+
+        progress.addEventListener(
+            "click",
+            function(e) {
+
+                if (!audio.duration) {
+                    return;
+                }
+
+
+                const width =
+                    progress.clientWidth;
+
+
+                const clickX =
+                    e.offsetX;
+
+
+                audio.currentTime =
+                    (
+                        clickX /
+                        width
+                    ) *
+                    audio.duration;
+
+            }
+        );
+
+
+        /*
+        ------------------------------------------------------------
+        24. LOCAL MUSIC UPLOAD
+        ------------------------------------------------------------
+        */
+
+        document
+            .getElementById("musicUpload")
+            .addEventListener(
+                "change",
+                function(e) {
+
+                    const files =
+                        Array.from(
+                            e.target.files
+                        );
+
+
+                    if (!files.length) {
+                        return;
+                    }
+
+
+                    const localSongs =
+                        files.map(
+                            function(file) {
+
+                                return {
+
+                                    id:
+                                        "local-" +
+                                        Date.now() +
+                                        "-" +
+                                        Math.random(),
+
+                                    title:
+                                        cleanFileName(
+                                            file.name
+                                        ),
+
+                                    artist:
+                                        "Local Music",
+
+                                    mimeType:
+                                        file.type,
+
+                                    duration:
+                                        "00:00",
+
+                                    source:
+                                        "local",
+
+                                    url:
+                                        URL.createObjectURL(
+                                            file
+                                        )
+
+                                };
+
+                            }
+                        );
+
+
+                    /*
+                    Add local files to playlist
+                    */
+
+                    songs =
+                        songs.concat(
+                            localSongs
+                        );
+
+
+                    renderPlaylist();
+
+
+                    /*
+                    Select first uploaded file
+                    */
+
+                    const firstNewIndex =
+                        songs.length -
+                        localSongs.length;
+
+
+                    loadSong(
+                        firstNewIndex
+                    );
+
+                }
+            );
+
+
+        /*
+        ------------------------------------------------------------
+        25. KEYBOARD SHORTCUT
+        ------------------------------------------------------------
+        */
+
+        document.addEventListener(
+            "keydown",
+            function(e) {
+
+                if (
+                    e.code ===
+                    "Space"
+                ) {
+
+                    /*
+                    Don't interrupt text input
+                    */
+
+                    if (
+                        e.target.tagName ===
+                        "INPUT"
+                    ) {
+
+                        return;
+
+                    }
+
+
+                    e.preventDefault();
+
+                    togglePlay();
+
+                }
+
+
+                if (
+                    e.code ===
+                    "ArrowRight"
+                ) {
+
+                    nextSong();
+
+                }
+
+
+                if (
+                    e.code ===
+                    "ArrowLeft"
+                ) {
+
+                    previousSong();
+
+                }
+
+            }
+        );
+
+
+        /*
+        ------------------------------------------------------------
+        26. START GOOGLE AUTH
+        ------------------------------------------------------------
+        */
+
+        window.addEventListener(
+            "load",
+            function() {
+
+                initializeGoogle();
+
+            }
+        );
+
+
+        /*
+        ------------------------------------------------------------
+        27. LIVE CLOCK (purely cosmetic, additive only)
+        ------------------------------------------------------------
+        */
+
+        function updateClock() {
+
+            const clockEl =
+                document.getElementById("clock");
+
+            if (!clockEl) {
+                return;
+            }
+
+            const now = new Date();
+
+            const hours =
+                String(now.getHours()).padStart(2, "0");
+
+            const minutes =
+                String(now.getMinutes()).padStart(2, "0");
+
+            clockEl.textContent =
+                hours + ":" + minutes;
+
+        }
+
+        updateClock();
+
+        setInterval(updateClock, 15000);
+
+
+        /*
+        ------------------------------------------------------------
+        28. PERSISTENT MINI PLAYER VISIBILITY (purely cosmetic, additive only)
+        ------------------------------------------------------------
+        */
+
+        (function() {
+
+            const heroEl =
+                document.querySelector(".hero");
+
+            const bottomPlayerEl =
+                document.getElementById("bottomPlayer");
+
+            if (!heroEl || !bottomPlayerEl) {
+                return;
+            }
+
+            if (!("IntersectionObserver" in window)) {
+                bottomPlayerEl.classList.add("visible");
+                return;
+            }
+
+            const observer = new IntersectionObserver(
+                function(entries) {
+
+                    entries.forEach(function(entry) {
+
+                        if (entry.isIntersecting) {
+
+                            bottomPlayerEl.classList.remove("visible");
+
+                        } else {
+
+                            bottomPlayerEl.classList.add("visible");
+
+                        }
+
+                    });
+
+                },
+                { threshold: 0.15 }
+            );
+
+            observer.observe(heroEl);
+
+        })();
+
+    </script>
+
+</body>
+
+</html>
