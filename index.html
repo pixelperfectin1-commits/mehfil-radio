@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>MEHFIL — 90s Ghazal Radio</title>
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Georgia, "Times New Roman", serif;
+    background: #171512;
+    color: #f5ead8;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* Background texture */
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.08;
+    background-image:
+        repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 3px,
+            #ffffff 4px
+        );
+    z-index: 20;
+}
+
+/* HEADER */
+header {
+    height: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 6vw;
+    border-bottom: 1px solid rgba(255,255,255,0.12);
+}
+
+.logo {
+    font-size: 25px;
+    font-weight: bold;
+    letter-spacing: 5px;
+}
+
+.status {
+    font-family: Arial, sans-serif;
+    font-size: 13px;
+    color: #c8c0b2;
+}
+
+.status span {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background: #7fc56b;
+    border-radius: 50%;
+    margin-right: 7px;
+}
+
+/* MAIN */
+main {
+    width: 100%;
+    max-width: 1200px;
+    margin: auto;
+    padding: 55px 6vw 150px;
+}
+
+.intro {
+    text-align: center;
+    margin-bottom: 45px;
+}
+
+.intro h1 {
+    font-size: clamp(50px, 10vw, 105px);
+    line-height: 0.9;
+    letter-spacing: -4px;
+    font-weight: 500;
+}
+
+.intro p {
+    margin-top: 18px;
+    font-family: Arial, sans-serif;
+    font-size: 13px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: #b9ad9c;
+}
+
+/* PLAYER AREA */
+.player {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 55px;
+    align-items: center;
+}
+
+/* ARTWORK */
+.artwork {
+    aspect-ratio: 1 / 1;
+    width: 100%;
+    max-width: 520px;
+    margin: auto;
+    position: relative;
+    overflow: hidden;
+    background:
+        linear-gradient(145deg, #923c2d, #3b201d 48%, #151717);
+    box-shadow: 20px 25px 60px rgba(0,0,0,0.45);
+}
+
+.artwork::before {
+    content: "";
+    position: absolute;
+    width: 70%;
+    height: 70%;
+    border-radius: 50%;
+    border: 2px solid rgba(245,234,216,0.25);
+    left: 15%;
+    top: 15%;
+}
+
+.artwork::after {
+    content: "MEHFIL";
+    position: absolute;
+    left: 25px;
+    bottom: 25px;
+    font-family: Arial, sans-serif;
+    font-weight: bold;
+    font-size: 13px;
+    letter-spacing: 5px;
+}
+
+.cassette {
+    position: absolute;
+    width: 58%;
+    height: 38%;
+    background: #c7b49b;
+    left: 21%;
+    top: 31%;
+    transform: rotate(-7deg);
+    box-shadow: 12px 15px 30px rgba(0,0,0,0.35);
+}
+
+.cassette::before {
+    content: "";
+    position: absolute;
+    width: 70%;
+    height: 35%;
+    background: #362e27;
+    left: 15%;
+    top: 30%;
+}
+
+.reel {
+    position: absolute;
+    width: 42px;
+    height: 42px;
+    background: #d4c2a7;
+    border: 8px solid #362e27;
+    border-radius: 50%;
+    top: 31%;
+}
+
+.reel.one {
+    left: 19%;
+}
+
+.reel.two {
+    right: 19%;
+}
+
+/* SONG INFO */
+.song-info {
+    padding-right: 15px;
+}
+
+.now-playing {
+    font-family: Arial, sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    font-size: 11px;
+    color: #9e8f7d;
+    margin-bottom: 15px;
+}
+
+.song-title {
+    font-size: clamp(35px, 5vw, 62px);
+    line-height: 1;
+    font-weight: 500;
+    margin-bottom: 15px;
+}
+
+.artist {
+    font-family: Arial, sans-serif;
+    color: #b7aa99;
+    font-size: 15px;
+    margin-bottom: 40px;
+}
+
+/* PROGRESS */
+.progress-area {
+    width: 100%;
+}
+
+.progress {
+    width: 100%;
+    height: 4px;
+    background: #403a33;
+    cursor: pointer;
+    position: relative;
+}
+
+.progress-fill {
+    width: 0%;
+    height: 100%;
+    background: #e6d4b8;
+}
+
+.time {
+    display: flex;
+    justify-content: space-between;
+    font-family: Arial, sans-serif;
+    font-size: 11px;
+    color: #8f8578;
+    margin-top: 9px;
+}
+
+/* CONTROLS */
+.controls {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    margin-top: 30px;
+}
+
+.control {
+    width: 45px;
+    height: 45px;
+    border: 1px solid #62594d;
+    background: transparent;
+    color: #f5ead8;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 15px;
+}
+
+.control:hover {
+    background: #f5ead8;
+    color: #171512;
+}
+
+.play {
+    width: 70px;
+    height: 70px;
+    border: none;
+    background: #f5ead8;
+    color: #171512;
+    font-size: 22px;
+}
+
+.play:hover {
+    background: #d7c5a9;
+}
+
+/* PLAYLIST */
+.playlist-section {
+    margin-top: 90px;
+}
+
+.section-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #403a33;
+    padding-bottom: 15px;
+    margin-bottom: 5px;
+}
+
+.section-title h2 {
+    font-size: 25px;
+    font-weight: 500;
+}
+
+.section-title span {
+    font-family: Arial, sans-serif;
+    font-size: 11px;
+    color: #8f8578;
+}
+
+.track {
+    display: grid;
+    grid-template-columns: 50px 1fr auto;
+    align-items: center;
+    padding: 18px 5px;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    cursor: pointer;
+}
+
+.track:hover {
+    background: rgba(255,255,255,0.04);
+}
+
+.track-number {
+    color: #817668;
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+}
+
+.track-name {
+    font-size: 18px;
+}
+
+.track-artist {
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+    color: #877d70;
+    margin-top: 5px;
+}
+
+.track-time {
+    font-family: Arial, sans-serif;
+    font-size: 11px;
+    color: #817668;
+}
+
+/* UPLOAD */
+.upload {
+    margin-top: 50px;
+    padding: 30px;
+    border: 1px dashed #51483d;
+    text-align: center;
+}
+
+.upload h3 {
+    font-size: 20px;
+    font-weight: normal;
+    margin-bottom: 8px;
+}
+
+.upload p {
+    font-family: Arial, sans-serif;
+    color: #8f8578;
+    font-size: 12px;
+    margin-bottom: 18px;
+}
+
+.upload label {
+    display: inline-block;
+    padding: 12px 22px;
+    border: 1px solid #756a5d;
+    cursor: pointer;
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.upload input {
+    display: none;
+}
+
+/* MOBILE */
+@media (max-width: 800px) {
+
+    header {
+        padding: 0 20px;
+    }
+
+    main {
+        padding: 40px 20px 130px;
+    }
+
+    .player {
+        grid-template-columns: 1fr;
+        gap: 40px;
+    }
+
+    .song-info {
+        padding: 0;
+    }
+
+    .artwork {
+        width: 90%;
+    }
+
+    .intro h1 {
+        letter-spacing: -2px;
+    }
+
+    .track {
+        grid-template-columns: 35px 1fr auto;
+    }
+}
+
+/* BOTTOM PLAYER */
+.bottom-player {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 90px;
+    background: rgba(24,21,18,0.96);
+    backdrop-filter: blur(15px);
+    border-top: 1px solid #403a33;
+    display: flex;
+    align-items: center;
+    padding: 0 5vw;
+    z-index: 30;
+}
+
+.bottom-song {
+    width: 30%;
+}
+
+.bottom-song strong {
+    font-size: 14px;
+}
+
+.bottom-song small {
+    display: block;
+    color: #8f8578;
+    font-family: Arial, sans-serif;
+    font-size: 10px;
+    margin-top: 5px;
+}
+
+.bottom-controls {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 18px;
+}
+
+.bottom-controls button {
+    border: none;
+    background: transparent;
+    color: #f5ead8;
+    cursor: pointer;
+    font-size: 17px;
+}
+
+.bottom-controls .bottom-play {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #f5ead8;
+    color: #171512;
+}
+
+@media (max-width: 600px) {
+
+    .bottom-player {
+        height: 76px;
+        padding: 0 15px;
+    }
+
+    .bottom-song {
+        width: 55%;
+    }
+
+    .bottom-controls {
+        gap: 8px;
+    }
+
+    .bottom-controls button:not(.bottom-play) {
+        display: none;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <div class="logo">MEHFIL</div>
+
+    <div class="status">
+        <span></span>
+        1 listener
+    </div>
+</header>
+
+<main>
+
+    <section class="intro">
+        <h1>मेहफ़िल</h1>
+        <p>90s Hindi · Ghazal · Ishq · Shaam</p>
+    </section>
+
+    <section class="player">
+
+        <div class="artwork">
+            <div class="cassette">
+                <div class="reel one"></div>
+                <div class="reel two"></div>
+            </div>
+        </div>
+
+        <div class="song-info">
+
+            <div class="now-playing">Now Playing</div>
+
+            <h2 class="song-title" id="songTitle">
+                Tum Itna Jo Muskura Rahe Ho
+            </h2>
+
+            <div class="artist" id="artist">
+                Jagjit Singh
+            </div>
+
+            <div class="progress-area">
+
+                <div class="progress" id="progress">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+
+                <div class="time">
+                    <span id="currentTime">00:00</span>
+                    <span id="duration">00:00</span>
+                </div>
+
+            </div>
+
+            <div class="controls">
+
+                <button class="control" onclick="previousSong()">◀◀</button>
+
+                <button class="control play" onclick="togglePlay()" id="playButton">
+                    ▶
+                </button>
+
+                <button class="control" onclick="nextSong()">▶▶</button>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <section class="playlist-section">
+
+        <div class="section-title">
+            <h2>Tonight's Mehfil</h2>
+            <span id="trackCount">5 TRACKS</span>
+        </div>
+
+        <div id="playlist">
+
+            <div class="track" onclick="selectSong(0)">
+                <div class="track-number">01</div>
+                <div>
+                    <div class="track-name">
+                        Tum Itna Jo Muskura Rahe Ho
+                    </div>
+                    <div class="track-artist">
+                        Jagjit Singh
+                    </div>
+                </div>
+                <div class="track-time">05:21</div>
+            </div>
+
+            <div class="track" onclick="selectSong(1)">
+                <div class="track-number">02</div>
+                <div>
+                    <div class="track-name">
+                        Hoshwalon Ko Khabar Kya
+                    </div>
+                    <div class="track-artist">
+                        Jagjit Singh
+                    </div>
+                </div>
+                <div class="track-time">05:07</div>
+            </div>
+
+            <div class="track" onclick="selectSong(2)">
+                <div class="track-number">03</div>
+                <div>
+                    <div class="track-name">
+                        Chithi Na Koi Sandes
+                    </div>
+                    <div class="track-artist">
+                        Jagjit Singh
+                    </div>
+                </div>
+                <div class="track-time">06:39</div>
+            </div>
+
+            <div class="track" onclick="selectSong(3)">
+                <div class="track-number">04</div>
+                <div>
+                    <div class="track-name">
+                        Aankhon Se Tune Kya Keh Diya
+                    </div>
+                    <div class="track-artist">
+                        Kumar Sanu
+                    </div>
+                </div>
+                <div class="track-time">04:54</div>
+            </div>
+
+            <div class="track" onclick="selectSong(4)">
+                <div class="track-number">05</div>
+                <div>
+                    <div class="track-name">
+                        Do Dil Mil Rahe Hain
+                    </div>
+                    <div class="track-artist">
+                        Kumar Sanu
+                    </div>
+                </div>
+                <div class="track-time">05:57</div>
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <section class="upload">
+
+        <h3>Your Personal Music Library</h3>
+
+        <p>
+            Add your legally obtained music files to test the player.
+        </p>
+
+        <label for="musicUpload">
+            + Add Music
+        </label>
+
+        <input
+            type="file"
+            id="musicUpload"
+            accept="audio/*"
+            multiple
+        >
+
+    </section>
+
+</main>
+
+
+<div class="bottom-player">
+
+    <div class="bottom-song">
+        <strong id="bottomTitle">
+            Tum Itna Jo Muskura Rahe Ho
+        </strong>
+
+        <small id="bottomArtist">
+            Jagjit Singh
+        </small>
+    </div>
+
+    <div class="bottom-controls">
+
+        <button onclick="previousSong()">◀</button>
+
+        <button
+            class="bottom-play"
+            onclick="togglePlay()"
+            id="bottomPlay"
+        >
+            ▶
+        </button>
+
+        <button onclick="nextSong()">▶</button>
+
+    </div>
+
+</div>
+
+
+<audio id="audio"></audio>
+
+
+<script>
+
+const songs = [
+    {
+        title: "Tum Itna Jo Muskura Rahe Ho",
+        artist: "Jagjit Singh",
+        duration: "05:21"
+    },
+    {
+        title: "Hoshwalon Ko Khabar Kya",
+        artist: "Jagjit Singh",
+        duration: "05:07"
+    },
+    {
+        title: "Chithi Na Koi Sandes",
+        artist: "Jagjit Singh",
+        duration: "06:39"
+    },
+    {
+        title: "Aankhon Se Tune Kya Keh Diya",
+        artist: "Kumar Sanu",
+        duration: "04:54"
+    },
+    {
+        title: "Do Dil Mil Rahe Hain",
+        artist: "Kumar Sanu",
+        duration: "05:57"
+    }
+];
+
+let currentSong = 0;
+let isPlaying = false;
+
+const audio = document.getElementById("audio");
+
+const title = document.getElementById("songTitle");
+const artist = document.getElementById("artist");
+
+const bottomTitle = document.getElementById("bottomTitle");
+const bottomArtist = document.getElementById("bottomArtist");
+
+const playButton = document.getElementById("playButton");
+const bottomPlay = document.getElementById("bottomPlay");
+
+const progress = document.getElementById("progress");
+const progressFill = document.getElementById("progressFill");
+
+const currentTime = document.getElementById("currentTime");
+const duration = document.getElementById("duration");
+
+
+function loadSong(index) {
+
+    currentSong = index;
+
+    const song = songs[currentSong];
+
+    title.textContent = song.title;
+    artist.textContent = song.artist;
+
+    bottomTitle.textContent = song.title;
+    bottomArtist.textContent = song.artist;
+
+    duration.textContent = song.duration;
+
+    progressFill.style.width = "0%";
+    currentTime.textContent = "00:00";
+
+    isPlaying = false;
+
+    playButton.textContent = "▶";
+    bottomPlay.textContent = "▶";
+}
+
+
+function togglePlay() {
+
+    if (isPlaying) {
+
+        audio.pause();
+
+        isPlaying = false;
+
+        playButton.textContent = "▶";
+        bottomPlay.textContent = "▶";
+
+    } else {
+
+        /*
+        Music file will be connected later.
+        */
+
+        if (audio.src) {
+
+            audio.play();
+
+        }
+
+        isPlaying = true;
+
+        playButton.textContent = "Ⅱ";
+        bottomPlay.textContent = "Ⅱ";
+    }
+}
+
+
+function selectSong(index) {
+
+    loadSong(index);
+
+    /*
+    Music source will be connected later.
+    */
+
+    isPlaying = true;
+
+    playButton.textContent = "Ⅱ";
+    bottomPlay.textContent = "Ⅱ";
+}
+
+
+function nextSong() {
+
+    currentSong++;
+
+    if (currentSong >= songs.length) {
+        currentSong = 0;
+    }
+
+    loadSong(currentSong);
+}
+
+
+function previousSong() {
+
+    currentSong--;
+
+    if (currentSong < 0) {
+        currentSong = songs.length - 1;
+    }
+
+    loadSong(currentSong);
+}
+
+
+audio.addEventListener("timeupdate", function() {
+
+    if (!audio.duration) return;
+
+    const percent =
+        (audio.currentTime / audio.duration) * 100;
+
+    progressFill.style.width = percent + "%";
+
+    const minutes =
+        Math.floor(audio.currentTime / 60);
+
+    const seconds =
+        Math.floor(audio.currentTime % 60);
+
+    currentTime.textContent =
+        String(minutes).padStart(2, "0") +
+        ":" +
+        String(seconds).padStart(2, "0");
+});
+
+
+progress.addEventListener("click", function(e) {
+
+    if (!audio.duration) return;
+
+    const width = progress.clientWidth;
+
+    const clickX = e.offsetX;
+
+    audio.currentTime =
+        (clickX / width) * audio.duration;
+});
+
+
+/* Upload music from your computer for testing */
+
+document
+.getElementById("musicUpload")
+.addEventListener("change", function(e) {
+
+    const files = Array.from(e.target.files);
+
+    if (files.length === 0) return;
+
+    console.log("Music files selected:", files);
+
+    /*
+    Google Drive integration will be added
+    in the next stage.
+    */
+
+    alert(
+        files.length +
+        " music file(s) selected. Google Drive connection will be added next."
+    );
+});
+
+
+loadSong(0);
+
+</script>
+
+</body>
+</html>
