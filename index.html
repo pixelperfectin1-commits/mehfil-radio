@@ -709,7 +709,7 @@
         <div class="topbar-center">MEHFIL</div>
 
         <div class="topbar-right">
-            <button id="driveLogin" onclick="connectGoogleDrive()">GOOGLE DRIVE ↗</button>
+            <button type="button" id="driveLogin" onclick="connectGoogleDrive()">GOOGLE DRIVE ↗</button>
         </div>
 
     </header>
@@ -803,68 +803,15 @@
     </section>
 
 
-    <!-- MAIN -->
-
-    <main>
-
-        <!-- PLAYLIST -->
-
-        <section class="playlist-section">
-
-            <div class="section-title">
-                <h2>Tonight's Mehfil</h2>
-                <span id="trackCount">0 TRACKS</span>
-            </div>
-
-            <div id="playlist">
-                <div class="placeholder-row">Connect Google Drive to load your music.</div>
-            </div>
-
-        </section>
-
-
-        <!-- PANELS -->
-
-        <div class="panels">
-
-            <div class="panel">
-                <div class="panel-label">Google Drive</div>
-                <h3>Your Library</h3>
-                <p id="driveMessage">Not connected</p>
-            </div>
-
-            <div class="panel">
-                <div class="panel-label">Personal Library</div>
-                <h3>Local Files</h3>
-                <p>Test local audio files from your computer.</p>
-                <label class="upload-btn" for="musicUpload">+ Add Music</label>
-                <input type="file" id="musicUpload" accept="audio/*" multiple>
-            </div>
-
-        </div>
-
-    </main>
-
-
-    <!-- PERSISTENT MINI PLAYER -->
-
-    <div class="bottom-player" id="bottomPlayer">
-
-        <div class="bottom-song">
-            <strong id="bottomTitle">No song selected</strong>
-            <small id="bottomArtist">MEHFIL</small>
-        </div>
-
-        <div class="bottom-controls">
-
-            <button onclick="previousSong()">◀</button>
-
-            <button class="bottom-play" onclick="togglePlay()" id="bottomPlay">▶</button>
-
-            <button onclick="nextSong()">▶</button>
-
-        </div>
-
+    <!-- Hidden compatibility elements: the visible playlist/library UI is removed, but these IDs remain hidden so the existing Google Drive/player JavaScript continues to work. -->
+    <div id="compatibility" aria-hidden="true" style="display:none !important;">
+        <span id="trackCount">0 TRACKS</span>
+        <div id="playlist"></div>
+        <p id="driveMessage">Not connected</p>
+        <input type="file" id="musicUpload" accept="audio/*" multiple>
+        <strong id="bottomTitle">No song selected</strong>
+        <small id="bottomArtist">MEHFIL</small>
+        <button id="bottomPlay" type="button">▶</button>
     </div>
 
 
@@ -919,19 +866,6 @@
         let isPlaying = false;
 
         let currentObjectURL = null;
-
-        let isConnecting = false;
-
-
-        /*
-        ------------------------------------------------------------
-        3b. TOKEN STORAGE KEYS (localStorage persistence)
-        ------------------------------------------------------------
-        */
-
-        const TOKEN_STORAGE_KEY = "mehfil_drive_token";
-
-        const TOKEN_EXPIRY_KEY = "mehfil_drive_token_expiry";
 
 
         /*
@@ -998,204 +932,82 @@
         ------------------------------------------------------------
         */
 
+        let googleInitStarted = false;
+        let googleInitTimer = null;
+
         function initializeGoogle() {
+
+            if (tokenClient) {
+                return true;
+            }
 
             if (
                 typeof google === "undefined" ||
                 !google.accounts ||
                 !google.accounts.oauth2
             ) {
-
-                setTimeout(
-                    initializeGoogle,
-                    500
-                );
-
-                return;
-            }
-
-
-            tokenClient =
-                google.accounts.oauth2.initTokenClient({
-
-                    client_id:
-                        GOOGLE_CLIENT_ID,
-
-                    scope:
-                        DRIVE_SCOPE,
-
-                    callback:
-                        async function(response) {
-
-                            isConnecting =
-                                false;
-
-
-                            if (response.error) {
-
-                                console.error(
-                                    "Google OAuth Error:",
-                                    response
-                                );
-
-                                setDisconnectedState(
-                                    "Could not connect to Google Drive. Please try again."
-                                );
-
-                                return;
-                            }
-
-
-                            accessToken =
-                                response.access_token;
-
-
-                            /*
-                            Persist token + expiry so the session
-                            survives a page refresh.
-                            */
-
-                            try {
-
-                                const expiresInMs =
-                                    (response.expires_in || 3600) * 1000;
-
-                                const expiryTimestamp =
-                                    Date.now() + expiresInMs;
-
-                                localStorage.setItem(
-                                    TOKEN_STORAGE_KEY,
-                                    accessToken
-                                );
-
-                                localStorage.setItem(
-                                    TOKEN_EXPIRY_KEY,
-                                    String(expiryTimestamp)
-                                );
-
-                            }
-
-                            catch (storageError) {
-
-                                /*
-                                localStorage may be unavailable
-                                (private browsing, etc). Connection
-                                still works for this session.
-                                */
-
-                                console.warn(
-                                    "Could not persist Drive token:",
-                                    storageError
-                                );
-
-                            }
-
-
-                            setConnectedState();
-
-
-                            await loadDriveMusic();
-
+                if (!googleInitStarted) {
+                    googleInitStarted = true;
+                    googleInitTimer = setInterval(function () {
+                        if (
+                            typeof google !== "undefined" &&
+                            google.accounts &&
+                            google.accounts.oauth2
+                        ) {
+                            clearInterval(googleInitTimer);
+                            googleInitTimer = null;
+                            createGoogleTokenClient();
                         }
+                    }, 250);
+                }
+                return false;
+            }
 
-                });
-
-
-            /*
-            Attempt to silently restore a previous session
-            (e.g. after a page refresh) using a saved,
-            still-valid access token.
-            */
-
-            restoreSavedSession();
-
+            createGoogleTokenClient();
+            return true;
         }
 
+        function createGoogleTokenClient() {
 
-        /*
-        ------------------------------------------------------------
-        5b. RESTORE SAVED SESSION FROM LOCALSTORAGE
-        ------------------------------------------------------------
-        */
-
-        async function restoreSavedSession() {
-
-            let savedToken = null;
-
-            let savedExpiry = null;
-
-
-            try {
-
-                savedToken =
-                    localStorage.getItem(TOKEN_STORAGE_KEY);
-
-                savedExpiry =
-                    localStorage.getItem(TOKEN_EXPIRY_KEY);
-
-            }
-
-            catch (storageError) {
-
+            if (tokenClient) {
                 return;
-
             }
 
+            tokenClient = google.accounts.oauth2.initTokenClient({
+                client_id: GOOGLE_CLIENT_ID,
+                scope: DRIVE_SCOPE,
 
-            if (!savedToken || !savedExpiry) {
+                callback: async function (response) {
 
-                return;
+                    if (response.error) {
+                        console.error("Google OAuth Error:", response);
 
-            }
+                        status.classList.add("disconnected");
+                        statusText.textContent = "OFFLINE";
+                        driveLogin.textContent = "GOOGLE DRIVE ↗";
+                        driveMessage.textContent =
+                            "Google authorization was cancelled or failed.";
 
+                        return;
+                    }
 
-            const stillValid =
-                Date.now() < Number(savedExpiry);
+                    if (!response.access_token) {
+                        driveMessage.textContent =
+                            "Google did not return an access token.";
+                        return;
+                    }
 
+                    accessToken = response.access_token;
 
-            if (!stillValid) {
+                    setConnectedState();
 
-                clearSavedSession();
-
-                return;
-
-            }
-
-
-            accessToken =
-                savedToken;
-
-
-            setConnectedState();
-
-
-            await loadDriveMusic();
-
-        }
-
-
-        /*
-        ------------------------------------------------------------
-        5c. CLEAR SAVED SESSION
-        ------------------------------------------------------------
-        */
-
-        function clearSavedSession() {
-
-            try {
-
-                localStorage.removeItem(TOKEN_STORAGE_KEY);
-
-                localStorage.removeItem(TOKEN_EXPIRY_KEY);
-
-            }
-
-            catch (storageError) {
-
-                /* Ignore */
-
-            }
-
+                    try {
+                        await loadDriveMusic();
+                    } catch (error) {
+                        console.error("Drive loading error:", error);
+                    }
+                }
+            });
         }
 
 
@@ -1205,41 +1017,79 @@
         ------------------------------------------------------------
         */
 
-        function connectGoogleDrive() {
+        async function connectGoogleDrive() {
 
-            if (isConnecting) {
+            driveLogin.disabled = true;
+            driveLogin.textContent = "CONNECTING…";
+            driveMessage.textContent = "Opening Google authorization…";
+
+            const ready = initializeGoogle();
+
+            if (!ready) {
+
+                // Wait briefly for the Google Identity Services script.
+                let attempts = 0;
+
+                const waitForGoogle = setInterval(function () {
+
+                    attempts++;
+
+                    if (tokenClient) {
+
+                        clearInterval(waitForGoogle);
+
+                        requestGoogleToken();
+
+                    } else if (attempts >= 40) {
+
+                        clearInterval(waitForGoogle);
+
+                        driveLogin.disabled = false;
+                        driveLogin.textContent = "GOOGLE DRIVE ↗";
+                        driveMessage.textContent =
+                            "Google login could not load. Refresh the page and try again.";
+
+                    }
+
+                }, 250);
 
                 return;
-
             }
 
+            requestGoogleToken();
+        }
+
+
+        function requestGoogleToken() {
 
             if (!tokenClient) {
 
+                driveLogin.disabled = false;
+                driveLogin.textContent = "GOOGLE DRIVE ↗";
                 driveMessage.textContent =
-                    "Google login is loading. Please try again.";
+                    "Google login is not ready yet.";
 
                 initializeGoogle();
 
                 return;
             }
 
+            try {
 
-            isConnecting =
-                true;
+                tokenClient.requestAccessToken({
+                    prompt: accessToken ? "" : "consent"
+                });
 
+            } catch (error) {
 
-            driveLogin.textContent =
-                "CONNECTING…";
+                console.error("OAuth request error:", error);
 
+                driveLogin.disabled = false;
+                driveLogin.textContent = "GOOGLE DRIVE ↗";
+                driveMessage.textContent =
+                    "Could not open Google authorization.";
 
-            tokenClient.requestAccessToken({
-                prompt:
-                    accessToken
-                        ? ""
-                        : "consent"
-            });
-
+            }
         }
 
 
@@ -1251,54 +1101,17 @@
 
         function setConnectedState() {
 
-            status.classList.remove(
-                "disconnected"
-            );
+            status.classList.remove("disconnected");
 
             statusText.textContent =
                 "CONNECTED";
 
+            driveLogin.disabled = false;
             driveLogin.textContent =
-                "GOOGLE DRIVE ↗";
+                "REFRESH DRIVE ↗";
 
             driveMessage.textContent =
                 "Google Drive connected. Loading audio files...";
-
-        }
-
-
-        /*
-        ------------------------------------------------------------
-        7b. DISCONNECTED UI
-        ------------------------------------------------------------
-        */
-
-        function setDisconnectedState(message) {
-
-            status.classList.add(
-                "disconnected"
-            );
-
-            statusText.textContent =
-                "OFFLINE";
-
-            driveLogin.textContent =
-                "GOOGLE DRIVE ↗";
-
-            accessToken =
-                null;
-
-
-            clearSavedSession();
-
-
-            if (message) {
-
-                driveMessage.textContent =
-                    message;
-
-            }
-
         }
 
 
@@ -1359,20 +1172,6 @@
                         errorText
                     );
 
-                    if (
-                        response.status === 401 ||
-                        response.status === 403
-                    ) {
-
-                        setDisconnectedState(
-                            "Your Google Drive session expired. Please reconnect."
-                        );
-
-                        return;
-
-                    }
-
-
                     throw new Error(
                         "Drive API request failed"
                     );
@@ -1384,16 +1183,7 @@
 
 
                 const driveFiles =
-                    (data.files || []).filter(
-                        function(file) {
-
-                            return (
-                                file.mimeType &&
-                                file.mimeType.indexOf("audio/") === 0
-                            );
-
-                        }
-                    );
+                    data.files || [];
 
 
                 if (driveFiles.length === 0) {
@@ -1403,7 +1193,7 @@
                     renderPlaylist();
 
                     driveMessage.textContent =
-                        "No music found in Google Drive.";
+                        "No audio files found in your Google Drive.";
 
                     return;
                 }
@@ -1790,9 +1580,8 @@
                         response.status === 403
                     ) {
 
-                        setDisconnectedState(
-                            "Your Google Drive session expired. Please reconnect."
-                        );
+                        driveMessage.textContent =
+                            "Drive permission expired. Please reconnect.";
 
                         return;
 
@@ -2428,6 +2217,12 @@
 
             }
         );
+
+        // Also initialize as soon as DOM parsing is complete.
+        // This does not change the UI; it only makes OAuth startup more reliable.
+        document.addEventListener("DOMContentLoaded", function () {
+            initializeGoogle();
+        });
 
 
         /*
