@@ -252,26 +252,73 @@
         }
 
         .fp-artwork{
+            width:96px;
+            height:96px;
+            border-radius:20px;
+            position:relative;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            overflow:hidden;
+            background:radial-gradient(circle at 50% 35%, rgba(168,70,53,.18), transparent 58%), #211813;
+            flex-shrink:0;
+            box-shadow:0 14px 34px rgba(0,0,0,.42), inset 0 0 0 1px rgba(244,234,215,.06);
+        }
+
+        .mehfil-disc{
             width:88px;
             height:88px;
-            border-radius:18px;
-            position:relative;
-            overflow:hidden;
-            background:#211813;
-            flex-shrink:0;
-            box-shadow:0 12px 32px rgba(0,0,0,.38);
+            display:block;
+            transform-origin:50% 50%;
+            animation:mehfilDiscRotate 9s linear infinite;
+            animation-play-state:paused;
+            will-change:transform;
+            filter:drop-shadow(0 8px 10px rgba(0,0,0,.38));
+            user-select:none;
         }
 
-        .fp-artwork img{
-            display:block;
+        #albumArtwork.playing .mehfil-disc{
+            animation-play-state:running;
+        }
+
+        .mehfil-disc-svg{
             width:100%;
             height:100%;
-            object-fit:cover;
-            transition:opacity .25s ease, transform .35s ease;
+            display:block;
+            overflow:visible;
         }
 
-        .fp-artwork:hover img{
-            transform:scale(1.025);
+        @keyframes mehfilDiscRotate{
+            from{ transform:rotate(0deg); }
+            to{ transform:rotate(360deg); }
+        }
+
+        .mehfil-disc-groove{
+            fill:none;
+            stroke:rgba(244,234,215,.11);
+            stroke-width:.55;
+        }
+
+        .mehfil-disc-groove-dark{
+            fill:none;
+            stroke:rgba(0,0,0,.34);
+            stroke-width:.7;
+        }
+
+        .mehfil-disc-label{
+            fill:#F4EAD7;
+        }
+
+        .mehfil-disc-hole{
+            fill:#17130F;
+            stroke:rgba(23,19,15,.45);
+            stroke-width:.8;
+        }
+
+        @media (prefers-reduced-motion: reduce){
+            .mehfil-disc{
+                animation:none;
+            }
         }
 
         .fp-info{
@@ -619,14 +666,15 @@
             .hero{ padding:30px 20px 210px; }
 
             .floating-player{
-                grid-template-columns:44px 1fr auto;
+                grid-template-columns:76px 1fr auto;
                 gap:12px;
                 padding:12px 14px;
                 bottom:24px;
             }
 
-            .fp-artwork{ width:52px; height:52px; border-radius:14px; }
-            .floating-player{ grid-template-columns:52px 1fr auto; }
+            .fp-artwork{ width:76px; height:76px; border-radius:16px; }
+            .mehfil-disc{ width:70px; height:70px; }
+            .floating-player{ grid-template-columns:76px 1fr auto; }
 
             .fp-title{ font-size:13px; }
 
@@ -750,8 +798,57 @@
 
         <div class="floating-player">
 
-            <div class="fp-artwork" id="albumArtwork" aria-label="Album artwork">
-                <img id="albumArtworkImage" alt="MEHFIL album artwork" decoding="async">
+            <div class="fp-artwork" id="albumArtwork" aria-label="MEHFIL record artwork">
+                <div class="mehfil-disc" id="mehfilDisc" aria-hidden="true">
+                    <svg class="mehfil-disc-svg" viewBox="0 0 88 88" xmlns="http://www.w3.org/2000/svg" role="presentation">
+                        <defs>
+                            <radialGradient id="discBase" cx="38%" cy="30%" r="72%">
+                                <stop offset="0" stop-color="#40362D"/>
+                                <stop offset=".38" stop-color="#1E1A17"/>
+                                <stop offset=".78" stop-color="#100E0C"/>
+                                <stop offset="1" stop-color="#28211C"/>
+                            </radialGradient>
+                            <radialGradient id="discSheen" cx="28%" cy="18%" r="72%">
+                                <stop offset="0" stop-color="#F4EAD7" stop-opacity=".24"/>
+                                <stop offset=".2" stop-color="#F4EAD7" stop-opacity=".07"/>
+                                <stop offset=".55" stop-color="#F4EAD7" stop-opacity="0"/>
+                            </radialGradient>
+                            <linearGradient id="discReflection" x1="0" y1="0" x2="1" y2="1">
+                                <stop offset="0" stop-color="#F4EAD7" stop-opacity=".28"/>
+                                <stop offset=".42" stop-color="#F4EAD7" stop-opacity=".04"/>
+                                <stop offset="1" stop-color="#F4EAD7" stop-opacity="0"/>
+                            </linearGradient>
+                            <linearGradient id="labelGradient" x1="0" y1="0" x2="1" y2="1">
+                                <stop offset="0" stop-color="#F7EEDC"/>
+                                <stop offset="1" stop-color="#CDBFA9"/>
+                            </linearGradient>
+                            <clipPath id="discClip">
+                                <circle cx="44" cy="44" r="42.5"/>
+                            </clipPath>
+                        </defs>
+
+                        <circle cx="44" cy="44" r="42.5" fill="url(#discBase)"/>
+                        <g clip-path="url(#discClip)">
+                            <circle cx="44" cy="44" r="41" class="mehfil-disc-groove-dark"/>
+                            <circle cx="44" cy="44" r="38.5" class="mehfil-disc-groove"/>
+                            <circle cx="44" cy="44" r="35.5" class="mehfil-disc-groove-dark"/>
+                            <circle cx="44" cy="44" r="32.5" class="mehfil-disc-groove"/>
+                            <circle cx="44" cy="44" r="29.5" class="mehfil-disc-groove-dark"/>
+                            <circle cx="44" cy="44" r="26.5" class="mehfil-disc-groove"/>
+                            <ellipse cx="30" cy="22" rx="32" ry="18" fill="url(#discSheen)" transform="rotate(-28 30 22)"/>
+                            <path d="M3 13 L84 51 L84 70 L3 32 Z" fill="url(#discReflection)" opacity=".55"/>
+                        </g>
+
+                        <circle cx="44" cy="44" r="20" fill="url(#labelGradient)"/>
+                        <circle cx="44" cy="44" r="18.5" fill="none" stroke="#7E3028" stroke-opacity=".22" stroke-width=".8"/>
+                        <circle cx="44" cy="44" r="15.8" fill="none" stroke="#17130F" stroke-opacity=".10" stroke-width=".7"/>
+
+                        <text x="44" y="43" text-anchor="middle" fill="#17130F" font-family="'Tiro Devanagari Hindi', serif" font-size="9.4" font-weight="400">मेहफ़िल</text>
+                        <text x="44" y="51.5" text-anchor="middle" fill="#7E3028" font-family="'Playfair Display', Georgia, serif" font-size="3.1" letter-spacing="1.1">MEHFIL</text>
+                        <circle cx="44" cy="44" r="2.25" class="mehfil-disc-hole"/>
+                        <circle cx="44" cy="44" r=".75" fill="#CBBDA7" opacity=".75"/>
+                    </svg>
+                </div>
             </div>
 
             <div class="fp-info">
@@ -906,8 +1003,11 @@
         const status =
             document.getElementById("status");
 
-        const albumArtworkImage =
-            document.getElementById("albumArtworkImage");
+        const albumArtwork =
+            document.getElementById("albumArtwork");
+
+        const mehfilDisc =
+            document.getElementById("mehfilDisc");
 
         updateAlbumArtwork(
             { title: "MEHFIL" },
@@ -1435,117 +1535,23 @@
                 .replace(/'/g, "&apos;");
         }
 
-        function createMehfilArtwork(song, index) {
-            const style = MEHFIL_ART_STYLES[index % MEHFIL_ART_STYLES.length];
-            const titleText = String(song?.title || "MEHFIL");
-            const shortTitle = titleText.length > 24
-                ? titleText.slice(0, 24) + "…"
-                : titleText;
-
-            let motif = "";
-
-            if (style.motif === "moon") {
-                motif = `
-                    <circle cx="310" cy="120" r="48" fill="${style.accent}" opacity=".92"/>
-                    <circle cx="330" cy="103" r="48" fill="${style.bg1}"/>
-                    <path d="M0 390 C80 330 120 360 190 330 C260 300 320 360 400 325 C460 300 500 330 600 280 L600 500 L0 500Z" fill="#120e0c" opacity=".9"/>
-                `;
-            } else if (style.motif === "window") {
-                motif = `
-                    <rect x="175" y="92" width="250" height="230" rx="4" fill="#16110e" opacity=".9"/>
-                    <path d="M300 92V322M175 207H425" stroke="${style.accent}" stroke-width="8" opacity=".55"/>
-                    <circle cx="300" cy="205" r="42" fill="${style.accent}" opacity=".18"/>
-                    <path d="M0 430H600" stroke="${style.accent}" stroke-width="2" opacity=".18"/>
-                `;
-            } else if (style.motif === "road") {
-                motif = `
-                    <path d="M235 500 L270 285 L330 285 L365 500Z" fill="#0e0c0b" opacity=".9"/>
-                    <path d="M300 300 L300 500" stroke="${style.accent}" stroke-width="8" stroke-dasharray="18 20" opacity=".55"/>
-                    <circle cx="300" cy="130" r="58" fill="${style.accent}" opacity=".16"/>
-                `;
-            } else if (style.motif === "lamp") {
-                motif = `
-                    <circle cx="300" cy="135" r="58" fill="${style.accent}" opacity=".18"/>
-                    <path d="M255 155 Q300 120 345 155 L326 190 H274Z" fill="${style.accent}" opacity=".9"/>
-                    <rect x="296" y="190" width="8" height="145" fill="${style.accent}" opacity=".65"/>
-                    <ellipse cx="300" cy="345" rx="75" ry="16" fill="#120e0c" opacity=".8"/>
-                    <path d="M190 410 Q300 345 410 410" stroke="${style.accent}" stroke-width="3" opacity=".3" fill="none"/>
-                `;
-            } else if (style.motif === "house") {
-                motif = `
-                    <path d="M120 380 L300 220 L480 380 V470 H120Z" fill="#120f0d" opacity=".9"/>
-                    <rect x="255" y="365" width="90" height="105" fill="${style.accent}" opacity=".14"/>
-                    <rect x="165" y="335" width="58" height="55" fill="${style.accent}" opacity=".2"/>
-                    <rect x="377" y="335" width="58" height="55" fill="${style.accent}" opacity=".2"/>
-                    <circle cx="300" cy="145" r="42" fill="${style.accent}" opacity=".12"/>
-                `;
-            } else if (style.motif === "silhouette") {
-                motif = `
-                    <circle cx="300" cy="150" r="52" fill="${style.accent}" opacity=".13"/>
-                    <circle cx="300" cy="250" r="36" fill="#110d0b"/>
-                    <path d="M220 470 Q225 315 300 305 Q375 315 380 470Z" fill="#110d0b"/>
-                    <path d="M180 420 Q300 350 420 420" stroke="${style.accent}" stroke-width="3" opacity=".25" fill="none"/>
-                `;
-            } else {
-                motif = `
-                    <ellipse cx="300" cy="240" rx="130" ry="95" fill="${style.accent}" opacity=".10"/>
-                    <ellipse cx="300" cy="240" rx="90" ry="62" fill="none" stroke="${style.accent}" stroke-width="3" opacity=".22"/>
-                    <path d="M120 430 Q300 335 480 430" stroke="${style.accent}" stroke-width="3" opacity=".22" fill="none"/>
-                    <circle cx="300" cy="240" r="14" fill="${style.accent}" opacity=".65"/>
-                `;
-            }
-
-            const svg = `
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600">
-                    <defs>
-                        <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-                            <stop offset="0" stop-color="${style.bg1}"/>
-                            <stop offset="1" stop-color="${style.bg2}"/>
-                        </linearGradient>
-                        <radialGradient id="glow" cx="50%" cy="30%" r="65%">
-                            <stop offset="0" stop-color="${style.accent}" stop-opacity=".14"/>
-                            <stop offset="1" stop-color="${style.accent}" stop-opacity="0"/>
-                        </radialGradient>
-                        <pattern id="grain" width="9" height="9" patternUnits="userSpaceOnUse">
-                            <circle cx="2" cy="3" r=".7" fill="${style.accent}" opacity=".08"/>
-                            <circle cx="7" cy="6" r=".5" fill="${style.accent}" opacity=".05"/>
-                        </pattern>
-                    </defs>
-                    <rect width="600" height="600" fill="url(#bg)"/>
-                    <rect width="600" height="600" fill="url(#glow)"/>
-                    ${motif}
-                    <rect width="600" height="600" fill="url(#grain)"/>
-                    <text x="42" y="64" fill="${style.accent}" font-family="Georgia, serif" font-size="20" letter-spacing="7">MEHFIL</text>
-                    <text x="42" y="520" fill="${style.accent}" opacity=".88" font-family="Georgia, serif" font-size="18">90s GHAZAL RADIO</text>
-                    <text x="42" y="552" fill="${style.accent}" opacity=".62" font-family="Arial, sans-serif" font-size="12" letter-spacing="2">${escapeXML(shortTitle.toUpperCase())}</text>
-                </svg>
-            `;
-
-            return "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg);
-        }
-
         function updateAlbumArtwork(song, index) {
-            if (!albumArtworkImage) return;
+            // The artwork is intentionally self-contained.
+            // Google Drive audio/authentication is untouched.
+            if (!albumArtwork) return;
 
-            const fallback = createMehfilArtwork(song || {}, index || 0);
-            const artwork = song && song.artwork ? song.artwork : fallback;
+            albumArtwork.setAttribute(
+                "aria-label",
+                song && song.title
+                    ? `${song.title} — MEHFIL record artwork`
+                    : "MEHFIL record artwork"
+            );
 
-            albumArtworkImage.style.opacity = "0.2";
-
-            const reveal = function () {
-                albumArtworkImage.style.opacity = "1";
-            };
-
-            albumArtworkImage.onload = reveal;
-            albumArtworkImage.onerror = function () {
-                albumArtworkImage.src = fallback;
-                albumArtworkImage.onload = reveal;
-            };
-
-            albumArtworkImage.src = artwork;
-            albumArtworkImage.alt = song?.title
-                ? `${song.title} — MEHFIL album artwork`
-                : "MEHFIL album artwork";
+            // Keep the disc itself independent from Drive thumbnails so it
+            // can never show a broken-image icon or alt text.
+            if (mehfilDisc) {
+                mehfilDisc.setAttribute("data-song-index", String(index || 0));
+            }
         }
 
 
@@ -1854,9 +1860,8 @@
                     .then(
                         function() {
 
-                            isPlaying =
-                                true;
-
+                            isPlaying = true;
+                            syncDiscAnimation();
                             updatePlayButtons();
 
                         }
@@ -2023,6 +2028,35 @@
         }
 
 
+        function syncDiscAnimation() {
+            if (!albumArtwork) return;
+
+            if (audio.paused || audio.ended || !audio.src) {
+                albumArtwork.classList.remove("playing");
+            } else {
+                albumArtwork.classList.add("playing");
+            }
+        }
+
+        audio.addEventListener("play", function() {
+            isPlaying = true;
+            syncDiscAnimation();
+            updatePlayButtons();
+        });
+
+        audio.addEventListener("pause", function() {
+            isPlaying = false;
+            syncDiscAnimation();
+            updatePlayButtons();
+        });
+
+        audio.addEventListener("ended", function() {
+            isPlaying = false;
+            syncDiscAnimation();
+            updatePlayButtons();
+        });
+
+
         /*
         ------------------------------------------------------------
         20. AUDIO TIME UPDATE
@@ -2158,14 +2192,10 @@
         audio.addEventListener(
             "ended",
             function() {
-
-                isPlaying =
-                    false;
-
+                isPlaying = false;
+                syncDiscAnimation();
                 updatePlayButtons();
-
                 nextSong();
-
             }
         );
 
