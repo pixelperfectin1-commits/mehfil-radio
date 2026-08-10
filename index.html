@@ -709,6 +709,45 @@
             .floating-player{ width:94vw; }
         }
 
+
+        /* ================= CREATOR SIGNATURE ================= */
+
+        .mehfil-creator-credit{
+            position:absolute;
+            left:50%;
+            bottom:11px;
+            transform:translateX(-50%);
+            z-index:4;
+            margin:0;
+            color:var(--beige);
+            font-family:'Playfair Display', Georgia, serif;
+            font-size:10px;
+            font-weight:400;
+            line-height:1;
+            letter-spacing:3.5px;
+            text-transform:uppercase;
+            white-space:nowrap;
+            opacity:.52;
+            pointer-events:none;
+            user-select:none;
+            text-align:center;
+        }
+
+        @media (max-width:800px){
+            .mehfil-creator-credit{
+                bottom:9px;
+                font-size:8px;
+                letter-spacing:2.8px;
+            }
+        }
+
+        @media (max-width:360px){
+            .mehfil-creator-credit{
+                font-size:7px;
+                letter-spacing:2.2px;
+            }
+        }
+
         @media (prefers-reduced-motion: reduce){
             html{ scroll-behavior:auto; }
             .bottom-player{ transition:none; }
@@ -883,6 +922,8 @@
             </div>
 
         </div>
+
+        <div class="mehfil-creator-credit" aria-label="Crafted by PixelPerfectIN">CRAFTED BY PIXELPERFECTIN</div>
 
     </section>
 
