@@ -7,864 +7,861 @@
 
     <title>MEHFIL — 90s Ghazal Radio</title>
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,500&family=Tiro+Devanagari+Hindi&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+
     <!-- Google Identity Services -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root{
+            --bg:#17130F;
+            --cream:#F4EAD7;
+            --beige:#CBBDA7;
+            --brown:#9D917E;
+            --maroon:#7E3028;
+            --brick:#A84635;
+            --olive:#35452F;
         }
 
-        body {
-            font-family: Georgia, "Times New Roman", serif;
-            background: #171512;
-            color: #f5ead8;
-            min-height: 100vh;
-            overflow-x: hidden;
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
         }
 
-        body::before {
-            content: "";
-            position: fixed;
-            inset: 0;
-            pointer-events: none;
-            opacity: 0.08;
-            background-image:
-                repeating-linear-gradient(
-                    0deg,
-                    transparent,
-                    transparent 3px,
-                    #ffffff 4px
-                );
-            z-index: 20;
+        html{
+            scroll-behavior:smooth;
         }
 
-        /* HEADER */
-
-        header {
-            min-height: 72px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 15px 6vw;
-            border-bottom: 1px solid rgba(255,255,255,0.12);
-            gap: 20px;
+        body{
+            font-family:'DM Sans', Arial, sans-serif;
+            background:var(--bg);
+            color:var(--cream);
+            min-height:100vh;
+            overflow-x:hidden;
         }
 
-        .logo {
-            font-size: 25px;
-            font-weight: bold;
-            letter-spacing: 5px;
+        ::selection{
+            background:var(--brick);
+            color:var(--cream);
         }
 
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 20px;
+        /* ================= TEXTURE LAYERS ================= */
+
+        .grain{
+            position:fixed;
+            inset:0;
+            width:100%;
+            height:100%;
+            pointer-events:none;
+            z-index:6;
+            opacity:.6;
+            mix-blend-mode:overlay;
         }
 
-        .status {
-            font-family: Arial, sans-serif;
-            font-size: 13px;
-            color: #c8c0b2;
-            white-space: nowrap;
+        .scanlines{
+            position:fixed;
+            inset:0;
+            pointer-events:none;
+            z-index:7;
+            opacity:.05;
+            background-image:repeating-linear-gradient(0deg, transparent, transparent 3px, var(--cream) 4px);
         }
 
-        .status span {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            background: #7fc56b;
-            border-radius: 50%;
-            margin-right: 7px;
+        .vignette{
+            position:fixed;
+            inset:0;
+            pointer-events:none;
+            z-index:5;
+            background:radial-gradient(ellipse at 50% 40%, transparent 35%, rgba(10,8,6,.55) 100%);
         }
 
-        .status.disconnected span {
-            background: #a85b4d;
+        /* ================= TOPBAR ================= */
+
+        .topbar{
+            position:relative;
+            z-index:10;
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            padding:26px 5vw;
+            gap:16px;
         }
 
-        #driveLogin {
-            background: #f5ead8;
-            color: #171512;
-            border: none;
-            padding: 11px 17px;
-            cursor: pointer;
-            font-family: Arial, sans-serif;
-            font-size: 11px;
-            letter-spacing: 1px;
-            transition: 0.2s;
+        .topbar-left{
+            display:flex;
+            align-items:center;
+            gap:18px;
         }
 
-        #driveLogin:hover {
-            background: #d7c5a9;
+        .clock{
+            font-size:12px;
+            letter-spacing:1px;
+            color:var(--beige);
+            font-variant-numeric:tabular-nums;
         }
 
-        /* MAIN */
-
-        main {
-            width: 100%;
-            max-width: 1200px;
-            margin: auto;
-            padding: 55px 6vw 150px;
+        .status{
+            display:flex;
+            align-items:center;
+            font-size:11px;
+            letter-spacing:1.5px;
+            color:var(--beige);
+            text-transform:uppercase;
         }
 
-        .intro {
-            text-align: center;
-            margin-bottom: 45px;
+        .status span:first-child{
+            display:inline-block;
+            width:6px;
+            height:6px;
+            border-radius:50%;
+            background:#8FBE73;
+            margin-right:8px;
+            box-shadow:0 0 8px rgba(143,190,115,.7);
         }
 
-        .intro h1 {
-            font-size: clamp(50px, 10vw, 105px);
-            line-height: 0.9;
-            letter-spacing: -4px;
-            font-weight: 500;
+        .status.disconnected span:first-child{
+            background:var(--brick);
+            box-shadow:0 0 8px rgba(168,70,53,.5);
         }
 
-        .intro p {
-            margin-top: 18px;
-            font-family: Arial, sans-serif;
-            font-size: 13px;
-            letter-spacing: 4px;
-            text-transform: uppercase;
-            color: #b9ad9c;
+        .topbar-center{
+            font-family:'Playfair Display', serif;
+            font-size:14px;
+            letter-spacing:6px;
+            color:var(--cream);
+            text-transform:uppercase;
+            white-space:nowrap;
         }
 
-        /* PLAYER */
-
-        .player {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 55px;
-            align-items: center;
+        #driveLogin{
+            background:transparent;
+            color:var(--cream);
+            border:1px solid rgba(244,234,215,.35);
+            padding:10px 18px;
+            cursor:pointer;
+            font-family:'DM Sans', Arial, sans-serif;
+            font-size:11px;
+            letter-spacing:1.5px;
+            border-radius:999px;
+            transition:.25s;
+            white-space:nowrap;
         }
 
-        /* ARTWORK */
+        #driveLogin:hover{
+            background:var(--cream);
+            color:var(--bg);
+            border-color:var(--cream);
+        }
 
-        .artwork {
-            aspect-ratio: 1 / 1;
-            width: 100%;
-            max-width: 520px;
-            margin: auto;
-            position: relative;
-            overflow: hidden;
+        /* ================= HERO / SCENE ================= */
 
+        .hero{
+            position:relative;
+            min-height:100vh;
+            display:flex;
+            flex-direction:column;
+            align-items:center;
+            justify-content:center;
+            overflow:hidden;
+            padding:40px 6vw 190px;
+        }
+
+        .scene{
+            position:absolute;
+            inset:0;
+            z-index:0;
             background:
-                linear-gradient(
-                    145deg,
-                    #923c2d,
-                    #3b201d 48%,
-                    #151717
-                );
-
-            box-shadow: 20px 25px 60px rgba(0,0,0,0.45);
+                radial-gradient(ellipse 60% 45% at 50% 18%, rgba(168,70,53,.55) 0%, rgba(126,48,40,.3) 35%, transparent 70%),
+                linear-gradient(180deg, #241A14 0%, #1C1611 35%, var(--bg) 75%, #0F0C09 100%);
         }
 
-        .artwork::before {
-            content: "";
-            position: absolute;
-            width: 70%;
-            height: 70%;
-            border-radius: 50%;
-            border: 2px solid rgba(245,234,216,0.25);
-            left: 15%;
-            top: 15%;
+        .scene svg{
+            position:absolute;
+            left:0;
+            right:0;
+            bottom:0;
+            width:100%;
+            height:auto;
         }
 
-        .artwork::after {
-            content: "MEHFIL";
-            position: absolute;
-            left: 25px;
-            bottom: 25px;
-            font-family: Arial, sans-serif;
-            font-weight: bold;
-            font-size: 13px;
-            letter-spacing: 5px;
+        .hero-content{
+            position:relative;
+            z-index:2;
+            text-align:center;
+            max-width:900px;
         }
 
-        .cassette {
-            position: absolute;
-            width: 58%;
-            height: 38%;
-            background: #c7b49b;
-            left: 21%;
-            top: 31%;
-            transform: rotate(-7deg);
-            box-shadow: 12px 15px 30px rgba(0,0,0,0.35);
+        .eyebrow{
+            font-size:11px;
+            letter-spacing:5px;
+            text-transform:uppercase;
+            color:var(--beige);
+            opacity:.75;
+            margin-bottom:22px;
         }
 
-        .cassette::before {
-            content: "";
-            position: absolute;
-            width: 70%;
-            height: 35%;
-            background: #362e27;
-            left: 15%;
-            top: 30%;
+        .devanagari-title{
+            font-family:'Tiro Devanagari Hindi', serif;
+            font-size:clamp(64px, 13vw, 168px);
+            line-height:1;
+            color:var(--cream);
+            text-shadow:0 4px 40px rgba(0,0,0,.5);
+            font-weight:400;
         }
 
-        .reel {
-            position: absolute;
-            width: 42px;
-            height: 42px;
-            background: #d4c2a7;
-            border: 8px solid #362e27;
-            border-radius: 50%;
-            top: 31%;
+        .hero-tags{
+            margin-top:26px;
+            font-size:12px;
+            letter-spacing:5px;
+            text-transform:uppercase;
+            color:var(--beige);
         }
 
-        .reel.one {
-            left: 19%;
+        .hero-poetic{
+            margin-top:20px;
+            font-family:'Playfair Display', serif;
+            font-style:italic;
+            font-size:15px;
+            color:var(--brown);
+            letter-spacing:.3px;
         }
 
-        .reel.two {
-            right: 19%;
+        /* ================= FLOATING PLAYER ================= */
+
+        .floating-player{
+            position:absolute;
+            left:50%;
+            bottom:44px;
+            transform:translateX(-50%);
+            z-index:3;
+            width:min(92vw, 620px);
+            display:grid;
+            grid-template-columns:56px 1fr auto;
+            align-items:center;
+            gap:20px;
+            padding:14px 20px;
+            border-radius:20px;
+            background:rgba(23,19,15,.55);
+            backdrop-filter:blur(18px);
+            -webkit-backdrop-filter:blur(18px);
+            border:1px solid rgba(244,234,215,.12);
+            box-shadow:0 20px 60px rgba(0,0,0,.45);
         }
 
-        /* SONG INFO */
-
-        .song-info {
-            padding-right: 15px;
+        .fp-artwork{
+            width:56px;
+            height:56px;
+            border-radius:12px;
+            position:relative;
+            overflow:hidden;
+            background:linear-gradient(145deg, var(--brick), var(--maroon) 55%, #201612);
+            flex-shrink:0;
         }
 
-        .now-playing {
-            font-family: Arial, sans-serif;
-            text-transform: uppercase;
-            letter-spacing: 3px;
-            font-size: 11px;
-            color: #9e8f7d;
-            margin-bottom: 15px;
+        .cassette{
+            position:absolute;
+            width:76%;
+            height:52%;
+            background:var(--beige);
+            left:12%;
+            top:24%;
+            border-radius:2px;
+            transform:rotate(-4deg);
         }
 
-        .song-title {
-            font-size: clamp(35px, 5vw, 62px);
-            line-height: 1;
-            font-weight: 500;
-            margin-bottom: 15px;
+        .reel{
+            position:absolute;
+            width:12px;
+            height:12px;
+            background:var(--cream);
+            border:3px solid #362e27;
+            border-radius:50%;
+            top:24%;
         }
 
-        .artist {
-            font-family: Arial, sans-serif;
-            color: #b7aa99;
-            font-size: 15px;
-            margin-bottom: 40px;
+        .reel.one{ left:16%; }
+        .reel.two{ right:16%; }
+
+        .fp-info{
+            min-width:0;
         }
 
-        /* PROGRESS */
-
-        .progress-area {
-            width: 100%;
+        .fp-title{
+            font-family:'Playfair Display', serif;
+            font-size:15px;
+            font-weight:600;
+            color:var(--cream);
+            white-space:nowrap;
+            overflow:hidden;
+            text-overflow:ellipsis;
         }
 
-        .progress {
-            width: 100%;
-            height: 4px;
-            background: #403a33;
-            cursor: pointer;
-            position: relative;
+        .fp-artist{
+            font-size:10px;
+            letter-spacing:1px;
+            text-transform:uppercase;
+            color:var(--beige);
+            opacity:.75;
+            margin-top:3px;
         }
 
-        .progress-fill {
-            width: 0%;
-            height: 100%;
-            background: #e6d4b8;
+        .fp-progress-area{
+            margin-top:9px;
         }
 
-        .time {
-            display: flex;
-            justify-content: space-between;
-            font-family: Arial, sans-serif;
-            font-size: 11px;
-            color: #8f8578;
-            margin-top: 9px;
+        .progress{
+            width:100%;
+            height:3px;
+            background:rgba(244,234,215,.15);
+            border-radius:3px;
+            cursor:pointer;
+            position:relative;
         }
 
-        /* CONTROLS */
-
-        .controls {
-            display: flex;
-            align-items: center;
-            gap: 18px;
-            margin-top: 30px;
+        .progress-fill{
+            width:0%;
+            height:100%;
+            background:var(--cream);
+            border-radius:3px;
         }
 
-        .control {
-            width: 45px;
-            height: 45px;
-            border: 1px solid #62594d;
-            background: transparent;
-            color: #f5ead8;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 15px;
+        .time{
+            display:flex;
+            justify-content:space-between;
+            font-size:9px;
+            color:var(--brown);
+            margin-top:6px;
+            letter-spacing:.5px;
         }
 
-        .control:hover {
-            background: #f5ead8;
-            color: #171512;
+        .fp-controls{
+            display:flex;
+            align-items:center;
+            gap:8px;
         }
 
-        .play {
-            width: 70px;
-            height: 70px;
-            border: none;
-            background: #f5ead8;
-            color: #171512;
-            font-size: 22px;
+        .control{
+            width:34px;
+            height:34px;
+            border:1px solid rgba(244,234,215,.25);
+            background:transparent;
+            color:var(--cream);
+            border-radius:50%;
+            cursor:pointer;
+            font-size:11px;
+            transition:.2s;
+            display:flex;
+            align-items:center;
+            justify-content:center;
         }
 
-        .play:hover {
-            background: #d7c5a9;
+        .control:hover{
+            background:var(--cream);
+            color:var(--bg);
         }
 
-        /* PLAYLIST */
-
-        .playlist-section {
-            margin-top: 90px;
+        .control.play{
+            width:44px;
+            height:44px;
+            border:none;
+            background:var(--cream);
+            color:var(--bg);
+            font-size:14px;
         }
 
-        .section-title {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #403a33;
-            padding-bottom: 15px;
-            margin-bottom: 5px;
+        .control.play:hover{
+            background:var(--beige);
         }
 
-        .section-title h2 {
-            font-size: 25px;
-            font-weight: 500;
+        /* ================= MAIN ================= */
+
+        main{
+            position:relative;
+            z-index:1;
+            width:100%;
+            max-width:880px;
+            margin:auto;
+            padding:0 6vw 160px;
         }
 
-        .section-title span {
-            font-family: Arial, sans-serif;
-            font-size: 11px;
-            color: #8f8578;
+        .section-title{
+            display:flex;
+            justify-content:space-between;
+            align-items:baseline;
+            border-bottom:1px solid rgba(244,234,215,.14);
+            padding-bottom:16px;
+            margin-bottom:6px;
         }
 
-        .track {
-            display: grid;
-            grid-template-columns: 50px 1fr auto;
-            align-items: center;
-            padding: 18px 5px;
-            border-bottom: 1px solid rgba(255,255,255,0.07);
-            cursor: pointer;
-            transition: 0.2s;
+        .section-title h2{
+            font-family:'Playfair Display', serif;
+            font-size:23px;
+            font-weight:500;
+            letter-spacing:.3px;
         }
 
-        .track:hover {
-            background: rgba(255,255,255,0.04);
+        .section-title span{
+            font-size:10px;
+            letter-spacing:2px;
+            color:var(--brown);
         }
 
-        .track.active {
-            background: rgba(255,255,255,0.06);
+        .track{
+            display:grid;
+            grid-template-columns:34px 1fr auto;
+            align-items:center;
+            gap:14px;
+            padding:18px 6px;
+            border-bottom:1px solid rgba(244,234,215,.06);
+            cursor:pointer;
+            transition:.2s;
+            position:relative;
         }
 
-        .track-number {
-            color: #817668;
-            font-family: Arial, sans-serif;
-            font-size: 12px;
+        .track:hover{
+            background:rgba(244,234,215,.035);
+            padding-left:14px;
         }
 
-        .track-name {
-            font-size: 18px;
+        .track.active{
+            background:rgba(168,70,53,.08);
         }
 
-        .track-artist {
-            font-family: Arial, sans-serif;
-            font-size: 12px;
-            color: #877d70;
-            margin-top: 5px;
+        .track.active::before{
+            content:"";
+            position:absolute;
+            left:-6vw;
+            top:0;
+            bottom:0;
+            width:2px;
+            background:var(--brick);
         }
 
-        .track-time {
-            font-family: Arial, sans-serif;
-            font-size: 11px;
-            color: #817668;
+        .track-number{
+            color:var(--brown);
+            font-size:11px;
+            letter-spacing:.5px;
         }
 
-        /* DRIVE AREA */
-
-        .drive-panel {
-            margin-top: 50px;
-            padding: 30px;
-            border: 1px dashed #51483d;
-            text-align: center;
+        .track-name{
+            font-family:'Playfair Display', serif;
+            font-size:17px;
+            color:var(--cream);
         }
 
-        .drive-panel h3 {
-            font-size: 20px;
-            font-weight: normal;
-            margin-bottom: 8px;
+        .track-artist{
+            font-size:10px;
+            letter-spacing:1px;
+            text-transform:uppercase;
+            color:var(--brown);
+            margin-top:5px;
         }
 
-        .drive-panel p {
-            font-family: Arial, sans-serif;
-            color: #8f8578;
-            font-size: 12px;
-            margin-bottom: 18px;
+        .track-time{
+            font-size:10px;
+            color:var(--brown);
+            letter-spacing:.5px;
         }
 
-        .drive-message {
-            margin-top: 15px;
-            font-family: Arial, sans-serif;
-            font-size: 12px;
-            color: #b9ad9c;
+        .placeholder-row{
+            padding:26px 6px;
+            color:var(--brown);
+            font-size:12px;
         }
 
-        /* UPLOAD */
+        /* PANELS: Drive + Upload */
 
-        .upload {
-            margin-top: 25px;
-            padding: 30px;
-            border: 1px dashed #51483d;
-            text-align: center;
+        .panels{
+            display:grid;
+            grid-template-columns:1fr 1fr;
+            gap:16px;
+            margin-top:64px;
         }
 
-        .upload h3 {
-            font-size: 20px;
-            font-weight: normal;
-            margin-bottom: 8px;
+        .panel{
+            padding:26px 24px;
+            border:1px solid rgba(244,234,215,.12);
+            border-radius:16px;
+            background:rgba(244,234,215,.02);
         }
 
-        .upload p {
-            font-family: Arial, sans-serif;
-            color: #8f8578;
-            font-size: 12px;
-            margin-bottom: 18px;
+        .panel-label{
+            font-size:10px;
+            letter-spacing:3px;
+            text-transform:uppercase;
+            color:var(--brown);
+            margin-bottom:10px;
         }
 
-        .upload label {
-            display: inline-block;
-            padding: 12px 22px;
-            border: 1px solid #756a5d;
-            cursor: pointer;
-            font-family: Arial, sans-serif;
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+        .panel h3{
+            font-family:'Playfair Display', serif;
+            font-weight:500;
+            font-size:19px;
+            color:var(--cream);
+            margin-bottom:6px;
         }
 
-        .upload label:hover {
-            background: #f5ead8;
-            color: #171512;
+        .panel p{
+            font-size:12px;
+            color:var(--beige);
+            opacity:.75;
+            margin-bottom:16px;
+            line-height:1.5;
         }
 
-        .upload input {
-            display: none;
+        .upload-btn{
+            display:inline-block;
+            padding:10px 18px;
+            border:1px solid rgba(244,234,215,.3);
+            border-radius:999px;
+            cursor:pointer;
+            font-size:11px;
+            letter-spacing:1.5px;
+            text-transform:uppercase;
+            transition:.2s;
         }
 
-        /* BOTTOM PLAYER */
-
-        .bottom-player {
-            position: fixed;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            height: 90px;
-            background: rgba(24,21,18,0.96);
-            backdrop-filter: blur(15px);
-            border-top: 1px solid #403a33;
-            display: flex;
-            align-items: center;
-            padding: 0 5vw;
-            z-index: 30;
+        .upload-btn:hover{
+            background:var(--cream);
+            color:var(--bg);
         }
 
-        .bottom-song {
-            width: 30%;
+        #musicUpload{
+            display:none;
         }
 
-        .bottom-song strong {
-            font-size: 14px;
+        /* ================= BOTTOM PLAYER (persistent mini bar) ================= */
+
+        .bottom-player{
+            position:fixed;
+            left:50%;
+            bottom:18px;
+            transform:translateX(-50%) translateY(140%);
+            z-index:30;
+            width:min(94vw, 420px);
+            display:flex;
+            align-items:center;
+            gap:14px;
+            padding:10px 16px;
+            border-radius:999px;
+            background:rgba(23,19,15,.75);
+            backdrop-filter:blur(16px);
+            -webkit-backdrop-filter:blur(16px);
+            border:1px solid rgba(244,234,215,.14);
+            box-shadow:0 14px 40px rgba(0,0,0,.45);
+            transition:transform .35s ease;
         }
 
-        .bottom-song small {
-            display: block;
-            color: #8f8578;
-            font-family: Arial, sans-serif;
-            font-size: 10px;
-            margin-top: 5px;
+        .bottom-player.visible{
+            transform:translateX(-50%) translateY(0);
         }
 
-        .bottom-controls {
-            flex: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 18px;
+        .bottom-song{
+            flex:1;
+            min-width:0;
         }
 
-        .bottom-controls button {
-            border: none;
-            background: transparent;
-            color: #f5ead8;
-            cursor: pointer;
-            font-size: 17px;
+        .bottom-song strong{
+            display:block;
+            font-family:'Playfair Display', serif;
+            font-size:13px;
+            font-weight:600;
+            color:var(--cream);
+            white-space:nowrap;
+            overflow:hidden;
+            text-overflow:ellipsis;
         }
 
-        .bottom-controls .bottom-play {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            background: #f5ead8;
-            color: #171512;
+        .bottom-song small{
+            display:block;
+            color:var(--brown);
+            font-size:9px;
+            letter-spacing:1px;
+            text-transform:uppercase;
+            margin-top:3px;
         }
 
-        /* MOBILE */
+        .bottom-controls{
+            display:flex;
+            align-items:center;
+            gap:6px;
+        }
 
-        @media (max-width: 800px) {
+        .bottom-controls button{
+            border:none;
+            background:transparent;
+            color:var(--cream);
+            cursor:pointer;
+            font-size:13px;
+            width:28px;
+            height:28px;
+        }
 
-            header {
-                padding: 15px 20px;
+        .bottom-controls .bottom-play{
+            width:36px;
+            height:36px;
+            border-radius:50%;
+            background:var(--cream);
+            color:var(--bg);
+            display:flex;
+            align-items:center;
+            justify-content:center;
+        }
+
+        /* ================= RESPONSIVE ================= */
+
+        @media (max-width:1024px){
+            .devanagari-title{ font-size:clamp(56px, 15vw, 120px); }
+        }
+
+        @media (max-width:800px){
+
+            .topbar{ padding:20px 20px; }
+
+            .clock{ display:none; }
+
+            .topbar-center{ letter-spacing:4px; font-size:12px; }
+
+            #driveLogin{ padding:9px 14px; font-size:10px; }
+
+            .hero{ padding:30px 20px 210px; }
+
+            .floating-player{
+                grid-template-columns:44px 1fr auto;
+                gap:12px;
+                padding:12px 14px;
+                bottom:24px;
             }
 
-            .header-right {
-                gap: 10px;
-            }
+            .fp-artwork{ width:44px; height:44px; }
 
-            .status {
-                display: none;
-            }
+            .fp-title{ font-size:13px; }
 
-            #driveLogin {
-                padding: 9px 12px;
-                font-size: 9px;
-            }
+            .control{ width:30px; height:30px; }
 
-            main {
-                padding: 40px 20px 130px;
-            }
+            .control.play{ width:38px; height:38px; }
 
-            .player {
-                grid-template-columns: 1fr;
-                gap: 40px;
-            }
+            main{ padding:0 20px 140px; }
 
-            .song-info {
-                padding: 0;
-            }
-
-            .artwork {
-                width: 90%;
-            }
-
-            .intro h1 {
-                letter-spacing: -2px;
-            }
-
-            .track {
-                grid-template-columns: 35px 1fr auto;
-            }
+            .panels{ grid-template-columns:1fr; }
         }
 
-        @media (max-width: 600px) {
+        @media (max-width:480px){
 
-            .bottom-player {
-                height: 76px;
-                padding: 0 15px;
-            }
+            .topbar-left{ gap:10px; }
 
-            .bottom-song {
-                width: 55%;
-            }
+            .status span:last-child{ display:none; }
 
-            .bottom-controls {
-                gap: 8px;
-            }
+            .hero-tags{ letter-spacing:3px; font-size:10px; }
 
-            .bottom-controls button:not(.bottom-play) {
-                display: none;
-            }
+            .fp-controls{ gap:6px; }
+
+            .track{ grid-template-columns:26px 1fr auto; gap:10px; }
+
+            .track-name{ font-size:15px; }
+        }
+
+        @media (max-width:360px){
+
+            .devanagari-title{ font-size:clamp(48px, 16vw, 90px); }
+
+            .floating-player{ width:94vw; }
+        }
+
+        @media (prefers-reduced-motion: reduce){
+            html{ scroll-behavior:auto; }
+            .bottom-player{ transition:none; }
         }
     </style>
 </head>
 
 <body>
 
-    <!-- HEADER -->
+    <!-- TEXTURE LAYERS -->
 
-    <header>
+    <svg class="grain" xmlns="http://www.w3.org/2000/svg">
+        <filter id="grainFilter">
+            <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch"></feTurbulence>
+            <feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.05 0"></feColorMatrix>
+        </filter>
+        <rect width="100%" height="100%" filter="url(#grainFilter)"></rect>
+    </svg>
 
-        <div class="logo">
-            MEHFIL
+    <div class="scanlines"></div>
+    <div class="vignette"></div>
+
+
+    <!-- TOPBAR -->
+
+    <header class="topbar">
+
+        <div class="topbar-left">
+            <span class="clock" id="clock">--:--</span>
+            <div class="status disconnected" id="status">
+                <span></span>
+                <span id="statusText">OFFLINE</span>
+            </div>
         </div>
 
-        <div class="header-right">
+        <div class="topbar-center">MEHFIL</div>
 
-            <button
-                id="driveLogin"
-                onclick="connectGoogleDrive()"
-            >
-                CONNECT GOOGLE DRIVE
-            </button>
+        <div class="topbar-right">
+            <button id="driveLogin" onclick="connectGoogleDrive()">GOOGLE DRIVE ↗</button>
+        </div>
 
-            <div
-                class="status disconnected"
-                id="status"
-            >
-                <span></span>
-                <span id="statusText">
-                    OFFLINE
-                </span>
+    </header>
+
+
+    <!-- HERO -->
+
+    <section class="hero">
+
+        <div class="scene">
+            <svg viewBox="0 0 1440 420" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+                <g fill="#0F0B08">
+                    <path d="M0,420 L0,240 L60,240 L60,180 L120,180 L120,240 L180,220 L180,260 L240,260 L240,190 Q270,170 300,190 L300,260 L360,260 L360,210 L420,210 L420,260 L480,260 L480,200 L520,170 L560,200 L560,260 L620,260 L620,230 L680,230 L680,260 L740,260 L740,190 Q770,160 800,190 L800,260 L860,260 L860,220 L920,220 L920,260 L980,260 L980,195 L1020,165 L1060,195 L1060,260 L1120,260 L1120,215 L1180,215 L1180,260 L1240,260 L1240,185 Q1270,160 1300,185 L1300,260 L1360,260 L1360,230 L1440,230 L1440,420 Z"></path>
+                </g>
+                <g fill="#A84635" opacity="0.55">
+                    <circle cx="120" cy="210" r="4"></circle>
+                    <circle cx="300" cy="225" r="4"></circle>
+                    <circle cx="520" cy="185" r="4"></circle>
+                    <circle cx="800" cy="225" r="4"></circle>
+                    <circle cx="1020" cy="180" r="4"></circle>
+                    <circle cx="1300" cy="200" r="4"></circle>
+                </g>
+                <g fill="#171310" opacity="0.9">
+                    <ellipse cx="150" cy="405" rx="46" ry="14"></ellipse>
+                    <rect x="146" y="330" width="8" height="76"></rect>
+                    <circle cx="150" cy="320" r="36"></circle>
+                    <ellipse cx="1260" cy="410" rx="40" ry="12"></ellipse>
+                    <rect x="1256" y="345" width="7" height="66"></rect>
+                    <circle cx="1260" cy="336" r="30"></circle>
+                </g>
+            </svg>
+        </div>
+
+        <div class="hero-content">
+
+            <div class="eyebrow">A 90s Ghazal Radio</div>
+
+            <h1 class="devanagari-title">मेहफ़िल</h1>
+
+            <p class="hero-tags">90s Hindi · Ghazal · Ishq · Shaam</p>
+
+            <p class="hero-poetic">"Thodi si raat, thoda sa ishq, aur ek gaana."</p>
+
+        </div>
+
+
+        <!-- FLOATING PLAYER -->
+
+        <div class="floating-player">
+
+            <div class="fp-artwork">
+                <div class="cassette">
+                    <div class="reel one"></div>
+                    <div class="reel two"></div>
+                </div>
+            </div>
+
+            <div class="fp-info">
+
+                <div class="fp-title" id="songTitle">Connect Google Drive</div>
+
+                <div class="fp-artist" id="artist">Your music library</div>
+
+                <div class="fp-progress-area">
+
+                    <div class="progress" id="progress">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+
+                    <div class="time">
+                        <span id="currentTime">00:00</span>
+                        <span id="duration">00:00</span>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="fp-controls">
+
+                <button class="control" onclick="previousSong()">◀◀</button>
+
+                <button class="control play" onclick="togglePlay()" id="playButton">▶</button>
+
+                <button class="control" onclick="nextSong()">▶▶</button>
+
             </div>
 
         </div>
 
-    </header>
+    </section>
 
 
     <!-- MAIN -->
 
     <main>
 
-        <!-- INTRO -->
-
-        <section class="intro">
-
-            <h1>
-                मेहफ़िल
-            </h1>
-
-            <p>
-                90s Hindi · Ghazal · Ishq · Shaam
-            </p>
-
-        </section>
-
-
-        <!-- PLAYER -->
-
-        <section class="player">
-
-            <!-- ARTWORK -->
-
-            <div class="artwork">
-
-                <div class="cassette">
-
-                    <div class="reel one"></div>
-
-                    <div class="reel two"></div>
-
-                </div>
-
-            </div>
-
-
-            <!-- SONG INFO -->
-
-            <div class="song-info">
-
-                <div class="now-playing">
-                    Now Playing
-                </div>
-
-                <h2
-                    class="song-title"
-                    id="songTitle"
-                >
-                    Connect Google Drive
-                </h2>
-
-                <div
-                    class="artist"
-                    id="artist"
-                >
-                    Your music library
-                </div>
-
-
-                <!-- PROGRESS -->
-
-                <div class="progress-area">
-
-                    <div
-                        class="progress"
-                        id="progress"
-                    >
-
-                        <div
-                            class="progress-fill"
-                            id="progressFill"
-                        ></div>
-
-                    </div>
-
-
-                    <div class="time">
-
-                        <span id="currentTime">
-                            00:00
-                        </span>
-
-                        <span id="duration">
-                            00:00
-                        </span>
-
-                    </div>
-
-                </div>
-
-
-                <!-- CONTROLS -->
-
-                <div class="controls">
-
-                    <button
-                        class="control"
-                        onclick="previousSong()"
-                    >
-                        ◀◀
-                    </button>
-
-                    <button
-                        class="control play"
-                        onclick="togglePlay()"
-                        id="playButton"
-                    >
-                        ▶
-                    </button>
-
-                    <button
-                        class="control"
-                        onclick="nextSong()"
-                    >
-                        ▶▶
-                    </button>
-
-                </div>
-
-            </div>
-
-        </section>
-
-
         <!-- PLAYLIST -->
 
         <section class="playlist-section">
 
             <div class="section-title">
-
-                <h2>
-                    Tonight's Mehfil
-                </h2>
-
-                <span id="trackCount">
-                    0 TRACKS
-                </span>
-
+                <h2>Tonight's Mehfil</h2>
+                <span id="trackCount">0 TRACKS</span>
             </div>
-
 
             <div id="playlist">
-
-                <div
-                    style="
-                        padding:30px 5px;
-                        color:#8f8578;
-                        font-family:Arial,sans-serif;
-                        font-size:12px;
-                    "
-                >
-                    Connect Google Drive to load your music.
-                </div>
-
+                <div class="placeholder-row">Connect Google Drive to load your music.</div>
             </div>
 
         </section>
 
 
-        <!-- GOOGLE DRIVE -->
+        <!-- PANELS -->
 
-        <section class="drive-panel">
+        <div class="panels">
 
-            <h3>
-                Google Drive Music Library
-            </h3>
-
-            <p>
-                Connect your Google Drive to load your legally obtained audio files.
-            </p>
-
-            <div
-                class="drive-message"
-                id="driveMessage"
-            >
-                Not connected
+            <div class="panel">
+                <div class="panel-label">Google Drive</div>
+                <h3>Your Library</h3>
+                <p id="driveMessage">Not connected</p>
             </div>
 
-        </section>
+            <div class="panel">
+                <div class="panel-label">Personal Library</div>
+                <h3>Local Files</h3>
+                <p>Test local audio files from your computer.</p>
+                <label class="upload-btn" for="musicUpload">+ Add Music</label>
+                <input type="file" id="musicUpload" accept="audio/*" multiple>
+            </div>
 
-
-        <!-- LOCAL UPLOAD -->
-
-        <section class="upload">
-
-            <h3>
-                Personal Music Library
-            </h3>
-
-            <p>
-                You can also test audio files directly from your computer.
-            </p>
-
-            <label for="musicUpload">
-                + Add Music
-            </label>
-
-            <input
-                type="file"
-                id="musicUpload"
-                accept="audio/*"
-                multiple
-            >
-
-        </section>
+        </div>
 
     </main>
 
 
-    <!-- BOTTOM PLAYER -->
+    <!-- PERSISTENT MINI PLAYER -->
 
-    <div class="bottom-player">
+    <div class="bottom-player" id="bottomPlayer">
 
         <div class="bottom-song">
-
-            <strong id="bottomTitle">
-                No song selected
-            </strong>
-
-            <small id="bottomArtist">
-                MEHFIL
-            </small>
-
+            <strong id="bottomTitle">No song selected</strong>
+            <small id="bottomArtist">MEHFIL</small>
         </div>
-
 
         <div class="bottom-controls">
 
-            <button
-                onclick="previousSong()"
-            >
-                ◀
-            </button>
+            <button onclick="previousSong()">◀</button>
 
-            <button
-                class="bottom-play"
-                onclick="togglePlay()"
-                id="bottomPlay"
-            >
-                ▶
-            </button>
+            <button class="bottom-play" onclick="togglePlay()" id="bottomPlay">▶</button>
 
-            <button
-                onclick="nextSong()"
-            >
-                ▶
-            </button>
+            <button onclick="nextSong()">▶</button>
 
         </div>
 
@@ -873,10 +870,7 @@
 
     <!-- AUDIO -->
 
-    <audio
-        id="audio"
-        preload="metadata"
-    ></audio>
+    <audio id="audio" preload="metadata"></audio>
 
 
     <script>
@@ -1191,1027 +1185,3 @@
                 songs =
                     driveFiles.map(
                         function(file) {
-
-                            return {
-
-                                id:
-                                    file.id,
-
-                                title:
-                                    cleanFileName(
-                                        file.name
-                                    ),
-
-                                artist:
-                                    "Google Drive",
-
-                                mimeType:
-                                    file.mimeType,
-
-                                size:
-                                    file.size || 0,
-
-                                duration:
-                                    "00:00",
-
-                                source:
-                                    "drive"
-
-                            };
-
-                        }
-                    );
-
-
-                renderPlaylist();
-
-
-                driveMessage.textContent =
-                    songs.length +
-                    " audio file(s) found in Google Drive.";
-
-
-                /*
-                Automatically select first song
-                */
-
-                if (songs.length > 0) {
-
-                    loadSong(0);
-
-                }
-
-            }
-
-            catch (error) {
-
-                console.error(error);
-
-                driveMessage.textContent =
-                    "Could not load Google Drive music. Check your Drive permission.";
-
-            }
-
-        }
-
-
-        /*
-        ------------------------------------------------------------
-        9. CLEAN FILE NAME
-        ------------------------------------------------------------
-        */
-
-        function cleanFileName(filename) {
-
-            return filename
-                .replace(/\.[^/.]+$/, "")
-                .replace(/[_-]+/g, " ")
-                .trim();
-
-        }
-
-
-        /*
-        ------------------------------------------------------------
-        10. RENDER PLAYLIST
-        ------------------------------------------------------------
-        */
-
-        function renderPlaylist() {
-
-            playlist.innerHTML = "";
-
-
-            trackCount.textContent =
-                songs.length +
-                (songs.length === 1
-                    ? " TRACK"
-                    : " TRACKS");
-
-
-            if (songs.length === 0) {
-
-                playlist.innerHTML = `
-
-                    <div
-                        style="
-                            padding:30px 5px;
-                            color:#8f8578;
-                            font-family:Arial,sans-serif;
-                            font-size:12px;
-                        "
-                    >
-                        No music available.
-                    </div>
-
-                `;
-
-                return;
-            }
-
-
-            songs.forEach(
-                function(song, index) {
-
-                    const track =
-                        document.createElement(
-                            "div"
-                        );
-
-
-                    track.className =
-                        "track";
-
-
-                    track.dataset.index =
-                        index;
-
-
-                    track.onclick =
-                        function() {
-
-                            selectSong(index);
-
-                        };
-
-
-                    track.innerHTML = `
-
-                        <div class="track-number">
-                            ${String(index + 1).padStart(2, "0")}
-                        </div>
-
-                        <div>
-
-                            <div class="track-name">
-                                ${escapeHTML(song.title)}
-                            </div>
-
-                            <div class="track-artist">
-                                ${escapeHTML(song.artist)}
-                            </div>
-
-                        </div>
-
-                        <div
-                            class="track-time"
-                            id="track-time-${index}"
-                        >
-                            ${song.duration}
-                        </div>
-
-                    `;
-
-
-                    playlist.appendChild(
-                        track
-                    );
-
-                }
-            );
-
-        }
-
-
-        /*
-        ------------------------------------------------------------
-        11. HTML ESCAPE
-        ------------------------------------------------------------
-        */
-
-        function escapeHTML(text) {
-
-            const div =
-                document.createElement(
-                    "div"
-                );
-
-            div.textContent =
-                text;
-
-            return div.innerHTML;
-
-        }
-
-
-        /*
-        ------------------------------------------------------------
-        12. LOAD SONG
-        ------------------------------------------------------------
-        */
-
-        async function loadSong(index) {
-
-            if (
-                !songs.length ||
-                !songs[index]
-            ) {
-
-                return;
-
-            }
-
-
-            /*
-            Stop previous audio
-            */
-
-            audio.pause();
-
-
-            /*
-            Remove previous object URL
-            */
-
-            if (currentObjectURL) {
-
-                URL.revokeObjectURL(
-                    currentObjectURL
-                );
-
-                currentObjectURL =
-                    null;
-
-            }
-
-
-            currentSong =
-                index;
-
-
-            const song =
-                songs[currentSong];
-
-
-            /*
-            Update UI
-            */
-
-            title.textContent =
-                song.title;
-
-            artist.textContent =
-                song.artist;
-
-            bottomTitle.textContent =
-                song.title;
-
-            bottomArtist.textContent =
-                song.artist;
-
-
-            currentTime.textContent =
-                "00:00";
-
-
-            duration.textContent =
-                song.duration || "00:00";
-
-
-            progressFill.style.width =
-                "0%";
-
-
-            isPlaying =
-                false;
-
-
-            updatePlayButtons();
-
-
-            highlightCurrentTrack();
-
-
-            /*
-            Drive audio
-            */
-
-            if (song.source === "drive") {
-
-                await loadDriveAudio(song);
-
-            }
-
-
-            /*
-            Local audio
-            */
-
-            else if (song.source === "local") {
-
-                audio.src =
-                    song.url;
-
-                audio.load();
-
-                try {
-
-                    await audio.play();
-
-                    isPlaying =
-                        true;
-
-                    updatePlayButtons();
-
-                }
-
-                catch (error) {
-
-                    console.log(
-                        "Browser waiting for play:",
-                        error
-                    );
-
-                }
-
-            }
-
-        }
-
-
-        /*
-        ------------------------------------------------------------
-        13. LOAD DRIVE AUDIO
-        ------------------------------------------------------------
-        */
-
-        async function loadDriveAudio(song) {
-
-            try {
-
-                driveMessage.textContent =
-                    "Loading: " +
-                    song.title;
-
-
-                const url =
-                    "https://www.googleapis.com/drive/v3/files/" +
-                    encodeURIComponent(song.id) +
-                    "?alt=media";
-
-
-                const response =
-                    await fetch(
-                        url,
-                        {
-                            method: "GET",
-
-                            headers: {
-                                Authorization:
-                                    "Bearer " +
-                                    accessToken
-                            }
-                        }
-                    );
-
-
-                if (!response.ok) {
-
-                    if (
-                        response.status === 401 ||
-                        response.status === 403
-                    ) {
-
-                        driveMessage.textContent =
-                            "Drive permission expired. Please reconnect.";
-
-                        return;
-
-                    }
-
-
-                    throw new Error(
-                        "Audio download failed"
-                    );
-
-                }
-
-
-                const blob =
-                    await response.blob();
-
-
-                currentObjectURL =
-                    URL.createObjectURL(
-                        blob
-                    );
-
-
-                audio.src =
-                    currentObjectURL;
-
-
-                audio.load();
-
-
-                /*
-                Automatically play
-                */
-
-                try {
-
-                    await audio.play();
-
-                    isPlaying =
-                        true;
-
-                    updatePlayButtons();
-
-                }
-
-                catch (error) {
-
-                    /*
-                    Browser may block autoplay.
-                    User can press play.
-                    */
-
-                    isPlaying =
-                        false;
-
-                    updatePlayButtons();
-
-                }
-
-
-                driveMessage.textContent =
-                    "Playing from Google Drive";
-
-
-            }
-
-            catch (error) {
-
-                console.error(
-                    "Drive audio error:",
-                    error
-                );
-
-                driveMessage.textContent =
-                    "Unable to play this Drive file.";
-
-            }
-
-        }
-
-
-        /*
-        ------------------------------------------------------------
-        14. PLAY / PAUSE
-        ------------------------------------------------------------
-        */
-
-        function togglePlay() {
-
-            if (!audio.src) {
-
-                if (songs.length > 0) {
-
-                    loadSong(
-                        currentSong
-                    );
-
-                }
-
-                return;
-
-            }
-
-
-            if (isPlaying) {
-
-                audio.pause();
-
-                isPlaying =
-                    false;
-
-            }
-
-            else {
-
-                audio.play()
-                    .then(
-                        function() {
-
-                            isPlaying =
-                                true;
-
-                            updatePlayButtons();
-
-                        }
-                    )
-                    .catch(
-                        function(error) {
-
-                            console.error(
-                                error
-                            );
-
-                        }
-                    );
-
-            }
-
-
-            updatePlayButtons();
-
-        }
-
-
-        /*
-        ------------------------------------------------------------
-        15. PLAY BUTTON UI
-        ------------------------------------------------------------
-        */
-
-        function updatePlayButtons() {
-
-            const symbol =
-                isPlaying
-                    ? "Ⅱ"
-                    : "▶";
-
-
-            playButton.textContent =
-                symbol;
-
-            bottomPlay.textContent =
-                symbol;
-
-        }
-
-
-        /*
-        ------------------------------------------------------------
-        16. NEXT SONG
-        ------------------------------------------------------------
-        */
-
-        function nextSong() {
-
-            if (!songs.length) {
-                return;
-            }
-
-
-            currentSong++;
-
-
-            if (
-                currentSong >=
-                songs.length
-            ) {
-
-                currentSong = 0;
-
-            }
-
-
-            loadSong(
-                currentSong
-            );
-
-        }
-
-
-        /*
-        ------------------------------------------------------------
-        17. PREVIOUS SONG
-        ------------------------------------------------------------
-        */
-
-        function previousSong() {
-
-            if (!songs.length) {
-                return;
-            }
-
-
-            currentSong--;
-
-
-            if (currentSong < 0) {
-
-                currentSong =
-                    songs.length - 1;
-
-            }
-
-
-            loadSong(
-                currentSong
-            );
-
-        }
-
-
-        /*
-        ------------------------------------------------------------
-        18. SELECT SONG
-        ------------------------------------------------------------
-        */
-
-        function selectSong(index) {
-
-            loadSong(
-                index
-            );
-
-        }
-
-
-        /*
-        ------------------------------------------------------------
-        19. HIGHLIGHT CURRENT SONG
-        ------------------------------------------------------------
-        */
-
-        function highlightCurrentTrack() {
-
-            const tracks =
-                document.querySelectorAll(
-                    ".track"
-                );
-
-
-            tracks.forEach(
-                function(track) {
-
-                    track.classList.remove(
-                        "active"
-                    );
-
-                }
-            );
-
-
-            const current =
-                document.querySelector(
-                    `.track[data-index="${currentSong}"]`
-                );
-
-
-            if (current) {
-
-                current.classList.add(
-                    "active"
-                );
-
-            }
-
-        }
-
-
-        /*
-        ------------------------------------------------------------
-        20. AUDIO TIME UPDATE
-        ------------------------------------------------------------
-        */
-
-        audio.addEventListener(
-            "timeupdate",
-            function() {
-
-                if (!audio.duration) {
-                    return;
-                }
-
-
-                const percent =
-                    (
-                        audio.currentTime /
-                        audio.duration
-                    ) * 100;
-
-
-                progressFill.style.width =
-                    percent + "%";
-
-
-                const minutes =
-                    Math.floor(
-                        audio.currentTime /
-                        60
-                    );
-
-
-                const seconds =
-                    Math.floor(
-                        audio.currentTime %
-                        60
-                    );
-
-
-                currentTime.textContent =
-                    String(minutes).padStart(
-                        2,
-                        "0"
-                    ) +
-                    ":" +
-                    String(seconds).padStart(
-                        2,
-                        "0"
-                    );
-
-            }
-        );
-
-
-        /*
-        ------------------------------------------------------------
-        21. AUDIO METADATA
-        ------------------------------------------------------------
-        */
-
-        audio.addEventListener(
-            "loadedmetadata",
-            function() {
-
-                if (!audio.duration) {
-                    return;
-                }
-
-
-                const minutes =
-                    Math.floor(
-                        audio.duration /
-                        60
-                    );
-
-
-                const seconds =
-                    Math.floor(
-                        audio.duration %
-                        60
-                    );
-
-
-                const formatted =
-                    String(minutes).padStart(
-                        2,
-                        "0"
-                    ) +
-                    ":" +
-                    String(seconds).padStart(
-                        2,
-                        "0"
-                    );
-
-
-                duration.textContent =
-                    formatted;
-
-
-                if (songs[currentSong]) {
-
-                    songs[currentSong].duration =
-                        formatted;
-
-                }
-
-
-                const trackTime =
-                    document.getElementById(
-                        "track-time-" +
-                        currentSong
-                    );
-
-
-                if (trackTime) {
-
-                    trackTime.textContent =
-                        formatted;
-
-                }
-
-            }
-        );
-
-
-        /*
-        ------------------------------------------------------------
-        22. SONG ENDED
-        ------------------------------------------------------------
-        */
-
-        audio.addEventListener(
-            "ended",
-            function() {
-
-                isPlaying =
-                    false;
-
-                updatePlayButtons();
-
-                nextSong();
-
-            }
-        );
-
-
-        /*
-        ------------------------------------------------------------
-        23. PROGRESS BAR SEEK
-        ------------------------------------------------------------
-        */
-
-        progress.addEventListener(
-            "click",
-            function(e) {
-
-                if (!audio.duration) {
-                    return;
-                }
-
-
-                const width =
-                    progress.clientWidth;
-
-
-                const clickX =
-                    e.offsetX;
-
-
-                audio.currentTime =
-                    (
-                        clickX /
-                        width
-                    ) *
-                    audio.duration;
-
-            }
-        );
-
-
-        /*
-        ------------------------------------------------------------
-        24. LOCAL MUSIC UPLOAD
-        ------------------------------------------------------------
-        */
-
-        document
-            .getElementById("musicUpload")
-            .addEventListener(
-                "change",
-                function(e) {
-
-                    const files =
-                        Array.from(
-                            e.target.files
-                        );
-
-
-                    if (!files.length) {
-                        return;
-                    }
-
-
-                    const localSongs =
-                        files.map(
-                            function(file) {
-
-                                return {
-
-                                    id:
-                                        "local-" +
-                                        Date.now() +
-                                        "-" +
-                                        Math.random(),
-
-                                    title:
-                                        cleanFileName(
-                                            file.name
-                                        ),
-
-                                    artist:
-                                        "Local Music",
-
-                                    mimeType:
-                                        file.type,
-
-                                    duration:
-                                        "00:00",
-
-                                    source:
-                                        "local",
-
-                                    url:
-                                        URL.createObjectURL(
-                                            file
-                                        )
-
-                                };
-
-                            }
-                        );
-
-
-                    /*
-                    Add local files to playlist
-                    */
-
-                    songs =
-                        songs.concat(
-                            localSongs
-                        );
-
-
-                    renderPlaylist();
-
-
-                    /*
-                    Select first uploaded file
-                    */
-
-                    const firstNewIndex =
-                        songs.length -
-                        localSongs.length;
-
-
-                    loadSong(
-                        firstNewIndex
-                    );
-
-                }
-            );
-
-
-        /*
-        ------------------------------------------------------------
-        25. KEYBOARD SHORTCUT
-        ------------------------------------------------------------
-        */
-
-        document.addEventListener(
-            "keydown",
-            function(e) {
-
-                if (
-                    e.code ===
-                    "Space"
-                ) {
-
-                    /*
-                    Don't interrupt text input
-                    */
-
-                    if (
-                        e.target.tagName ===
-                        "INPUT"
-                    ) {
-
-                        return;
-
-                    }
-
-
-                    e.preventDefault();
-
-                    togglePlay();
-
-                }
-
-
-                if (
-                    e.code ===
-                    "ArrowRight"
-                ) {
-
-                    nextSong();
-
-                }
-
-
-                if (
-                    e.code ===
-                    "ArrowLeft"
-                ) {
-
-                    previousSong();
-
-                }
-
-            }
-        );
-
-
-        /*
-        ------------------------------------------------------------
-        26. START GOOGLE AUTH
-        ------------------------------------------------------------
-        */
-
-        window.addEventListener(
-            "load",
-            function() {
-
-                initializeGoogle();
-
-            }
-        );
-
-    </script>
-
-</body>
-
-</html>
