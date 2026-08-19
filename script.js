@@ -1,13 +1,29 @@
 /* =========================================================
-   MEHFIL — YOUTUBE GHAZAL RADIO
-   GitHub Pages Version
+   MEHFIL — YOUTUBE MUSIC PLAYER
+   SINGLE VIDEO TEST VERSION
+
+   Video:
+   https://www.youtube.com/watch?v=z_DFIkcKJL8
 ========================================================= */
 
-const PLAYLIST_ID = "PLJeNQvgQ4Sl-uomVtOARCoEmMPJUkZH8p";
+
+/* =========================================================
+   VIDEO
+========================================================= */
+
+const VIDEO_ID = "z_DFIkcKJL8";
+
+
+/* =========================================================
+   GLOBAL STATE
+========================================================= */
 
 let player = null;
+
 let playerReady = false;
+
 let isPlaying = false;
+
 let progressTimer = null;
 
 
@@ -20,116 +36,265 @@ function $(id) {
 }
 
 
+/* =========================================================
+   TIME FORMAT
+========================================================= */
+
 function formatTime(seconds) {
-  if (!Number.isFinite(seconds) || seconds < 0) {
+
+  if (
+    !Number.isFinite(seconds) ||
+    seconds < 0
+  ) {
     return "00:00";
   }
 
-  const minutes = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60);
+  const minutes =
+    Math.floor(seconds / 60);
+
+  const remainingSeconds =
+    Math.floor(seconds % 60);
 
   return (
     String(minutes).padStart(2, "0") +
     ":" +
-    String(secs).padStart(2, "0")
+    String(remainingSeconds).padStart(2, "0")
   );
 }
 
 
 /* =========================================================
-   TRACK INFORMATION
+   UPDATE TRACK INFORMATION
 ========================================================= */
 
 function updateTrackInfo() {
 
-  if (!player || !playerReady) {
+  if (
+    !player ||
+    !playerReady
+  ) {
     return;
   }
 
-  const videoData = player.getVideoData();
+  try {
 
-  const title =
-    videoData.title ||
-    "MEHFIL RADIO";
+    const videoData =
+      player.getVideoData();
 
-  const artist =
-    videoData.author ||
-    "90s Ghazal Collection";
+    const title =
+      videoData.title ||
+      "MEHFIL RADIO";
+
+    const artist =
+      videoData.author ||
+      "Ghazal Collection";
 
 
-  $("songTitle").textContent = title;
-  $("artist").textContent = artist;
+    /* Desktop */
 
-  $("mobileTitle").textContent = title;
-  $("mobileArtist").textContent = artist;
+    const desktopTitle =
+      $("songTitle");
+
+    const desktopArtist =
+      $("artist");
+
+
+    if (desktopTitle) {
+      desktopTitle.textContent =
+        title;
+    }
+
+
+    if (desktopArtist) {
+      desktopArtist.textContent =
+        artist;
+    }
+
+
+    /* Mobile */
+
+    const mobileTitle =
+      $("mobileTitle");
+
+    const mobileArtist =
+      $("mobileArtist");
+
+
+    if (mobileTitle) {
+      mobileTitle.textContent =
+        title;
+    }
+
+
+    if (mobileArtist) {
+      mobileArtist.textContent =
+        artist;
+    }
+
+  } catch (error) {
+
+    console.log(
+      "MEHFIL: Could not read video information",
+      error
+    );
+
+  }
 }
 
 
 /* =========================================================
-   PROGRESS
+   UPDATE PROGRESS BAR
 ========================================================= */
 
 function updateProgress() {
 
-  if (!player || !playerReady) {
+  if (
+    !player ||
+    !playerReady
+  ) {
     return;
   }
 
-  const current =
-    player.getCurrentTime() || 0;
+  try {
 
-  const duration =
-    player.getDuration() || 0;
+    const current =
+      player.getCurrentTime() || 0;
+
+    const duration =
+      player.getDuration() || 0;
 
 
-  let percentage = 0;
+    let percentage = 0;
 
-  if (duration > 0) {
+
+    if (duration > 0) {
+
+      percentage =
+        (current / duration) * 100;
+
+    }
+
+
     percentage =
-      (current / duration) * 100;
-  }
+      Math.max(
+        0,
+        Math.min(
+          100,
+          percentage
+        )
+      );
 
-  percentage =
-    Math.max(
-      0,
-      Math.min(
-        100,
-        percentage
-      )
+
+    /* -----------------------------------------
+       DESKTOP
+    ----------------------------------------- */
+
+    const progressFill =
+      $("progressFill");
+
+    const progressKnob =
+      $("progressKnob");
+
+
+    if (progressFill) {
+
+      progressFill.style.width =
+        percentage + "%";
+
+    }
+
+
+    if (progressKnob) {
+
+      progressKnob.style.left =
+        percentage + "%";
+
+    }
+
+
+    /* -----------------------------------------
+       MOBILE
+    ----------------------------------------- */
+
+    const mobileProgressFill =
+      $("mobileProgressFill");
+
+    const mobileProgressKnob =
+      $("mobileProgressKnob");
+
+
+    if (mobileProgressFill) {
+
+      mobileProgressFill.style.width =
+        percentage + "%";
+
+    }
+
+
+    if (mobileProgressKnob) {
+
+      mobileProgressKnob.style.left =
+        percentage + "%";
+
+    }
+
+
+    /* -----------------------------------------
+       TIME
+    ----------------------------------------- */
+
+    const currentTime =
+      $("currentTime");
+
+    const durationTime =
+      $("duration");
+
+    const mobileCurrentTime =
+      $("mobileCurrentTime");
+
+    const mobileDuration =
+      $("mobileDuration");
+
+
+    if (currentTime) {
+
+      currentTime.textContent =
+        formatTime(current);
+
+    }
+
+
+    if (durationTime) {
+
+      durationTime.textContent =
+        formatTime(duration);
+
+    }
+
+
+    if (mobileCurrentTime) {
+
+      mobileCurrentTime.textContent =
+        formatTime(current);
+
+    }
+
+
+    if (mobileDuration) {
+
+      mobileDuration.textContent =
+        formatTime(duration);
+
+    }
+
+  } catch (error) {
+
+    console.log(
+      "MEHFIL: Progress update error",
+      error
     );
 
-
-  /* Desktop */
-
-  $("progressFill").style.width =
-    percentage + "%";
-
-  $("progressKnob").style.left =
-    percentage + "%";
-
-
-  /* Mobile */
-
-  $("mobileProgressFill").style.width =
-    percentage + "%";
-
-  $("mobileProgressKnob").style.left =
-    percentage + "%";
-
-
-  /* Time */
-
-  $("currentTime").textContent =
-    formatTime(current);
-
-  $("duration").textContent =
-    formatTime(duration);
-
-  $("mobileCurrentTime").textContent =
-    formatTime(current);
-
-  $("mobileDuration").textContent =
-    formatTime(duration);
+  }
 }
 
 
@@ -142,46 +307,88 @@ function setPlayingState(state) {
   isPlaying = state;
 
 
-  /* Desktop button */
+  /* -----------------------------------------
+     DESKTOP PLAY BUTTON
+  ----------------------------------------- */
 
-  $("playButton").textContent =
-    state ? "Ⅱ" : "▶";
-
-
-  /* Mobile button */
-
-  $("mobilePlayButton").textContent =
-    state ? "Ⅱ" : "▶";
+  const playButton =
+    $("playButton");
 
 
-  $("playButton").setAttribute(
-    "aria-label",
-    state ? "Pause" : "Play"
-  );
+  if (playButton) {
+
+    playButton.textContent =
+      state ? "Ⅱ" : "▶";
+
+    playButton.setAttribute(
+      "aria-label",
+      state ? "Pause" : "Play"
+    );
+
+  }
 
 
-  $("mobilePlayButton").setAttribute(
-    "aria-label",
-    state ? "Pause" : "Play"
-  );
+  /* -----------------------------------------
+     MOBILE PLAY BUTTON
+  ----------------------------------------- */
+
+  const mobilePlayButton =
+    $("mobilePlayButton");
 
 
-  /* Vinyl */
+  if (mobilePlayButton) {
 
-  $("vinyl").classList.toggle(
-    "playing",
-    state
-  );
+    mobilePlayButton.textContent =
+      state ? "Ⅱ" : "▶";
 
-  $("mobileVinyl").classList.toggle(
-    "playing",
-    state
-  );
+    mobilePlayButton.setAttribute(
+      "aria-label",
+      state ? "Pause" : "Play"
+    );
+
+  }
+
+
+  /* -----------------------------------------
+     DESKTOP VINYL
+  ----------------------------------------- */
+
+  const vinyl =
+    $("vinyl");
+
+
+  if (vinyl) {
+
+    vinyl.classList.toggle(
+      "playing",
+      state
+    );
+
+  }
+
+
+  /* -----------------------------------------
+     MOBILE VINYL
+  ----------------------------------------- */
+
+  const mobileVinyl =
+    $("mobileVinyl");
+
+
+  if (mobileVinyl) {
+
+    mobileVinyl.classList.toggle(
+      "playing",
+      state
+    );
+
+  }
+
 }
 
 
 /* =========================================================
-   PROGRESS TIMER
+   START PROGRESS TIMER
 ========================================================= */
 
 function startProgressTimer() {
@@ -190,13 +397,23 @@ function startProgressTimer() {
 
   updateProgress();
 
+
   progressTimer =
     setInterval(
-      updateProgress,
+      function () {
+
+        updateProgress();
+
+      },
       500
     );
+
 }
 
+
+/* =========================================================
+   STOP PROGRESS TIMER
+========================================================= */
 
 function stopProgressTimer() {
 
@@ -207,7 +424,9 @@ function stopProgressTimer() {
     );
 
     progressTimer = null;
+
   }
+
 }
 
 
@@ -217,68 +436,89 @@ function stopProgressTimer() {
 
 function togglePlay() {
 
+  console.log(
+    "MEHFIL: Play button clicked"
+  );
+
+
   if (!playerReady) {
 
     console.log(
-      "YouTube player is not ready yet."
+      "MEHFIL: YouTube player is not ready"
     );
 
     return;
-  }
-
-
-  if (isPlaying) {
-
-    player.pauseVideo();
-
-  } else {
-
-    player.playVideo();
 
   }
+
+
+  try {
+
+    if (isPlaying) {
+
+      console.log(
+        "MEHFIL: Pausing"
+      );
+
+      player.pauseVideo();
+
+    } else {
+
+      console.log(
+        "MEHFIL: Playing"
+      );
+
+      player.playVideo();
+
+    }
+
+  } catch (error) {
+
+    console.error(
+      "MEHFIL: Play/Pause error",
+      error
+    );
+
+  }
+
 }
 
 
 /* =========================================================
-   NEXT
+   NEXT BUTTON
 ========================================================= */
+
+/*
+   This is a single-video test.
+
+   There is no playlist yet, so Next does not have
+   another video to play.
+*/
 
 function nextTrack() {
 
-  if (!playerReady) {
-    return;
-  }
-
-  player.nextVideo();
-
-  setTimeout(
-    updateTrackInfo,
-    500
+  console.log(
+    "MEHFIL: Next clicked — single video test mode"
   );
+
 }
 
 
 /* =========================================================
-   PREVIOUS
+   PREVIOUS BUTTON
 ========================================================= */
 
 function previousTrack() {
 
-  if (!playerReady) {
-    return;
-  }
-
-  player.previousVideo();
-
-  setTimeout(
-    updateTrackInfo,
-    500
+  console.log(
+    "MEHFIL: Previous clicked — single video test mode"
   );
+
 }
 
 
 /* =========================================================
-   SEEK
+   SEEK FUNCTION
 ========================================================= */
 
 function seekTrack(
@@ -287,64 +527,109 @@ function seekTrack(
 ) {
 
   if (!playerReady) {
+
+    console.log(
+      "MEHFIL: Player not ready for seeking"
+    );
+
     return;
+
   }
 
 
-  const duration =
-    player.getDuration();
+  try {
+
+    const duration =
+      player.getDuration();
 
 
-  if (!duration) {
-    return;
-  }
+    if (!duration) {
+
+      return;
+
+    }
 
 
-  const rect =
-    element.getBoundingClientRect();
+    const rect =
+      element.getBoundingClientRect();
 
 
-  const position =
-    (event.clientX - rect.left) /
-    rect.width;
+    const clickPosition =
+      event.clientX -
+      rect.left;
 
 
-  const safePosition =
-    Math.max(
-      0,
-      Math.min(
-        1,
-        position
-      )
+    let percentage =
+      clickPosition /
+      rect.width;
+
+
+    percentage =
+      Math.max(
+        0,
+        Math.min(
+          1,
+          percentage
+        )
+      );
+
+
+    const newTime =
+      duration *
+      percentage;
+
+
+    console.log(
+      "MEHFIL: Seeking to",
+      newTime
     );
 
 
-  player.seekTo(
-    duration * safePosition,
-    true
-  );
+    player.seekTo(
+      newTime,
+      true
+    );
 
 
-  updateProgress();
+    updateProgress();
+
+  } catch (error) {
+
+    console.error(
+      "MEHFIL: Seek error",
+      error
+    );
+
+  }
+
 }
 
 
 /* =========================================================
-   SEEK BAR SETUP
+   SETUP SEEK BAR
 ========================================================= */
 
 function setupSeekBar(id) {
 
-  const element = $(id);
+  const element =
+    $(id);
+
 
   if (!element) {
+
+    console.log(
+      "MEHFIL: Seek element not found:",
+      id
+    );
+
     return;
+
   }
 
 
   element.addEventListener(
     "click",
-    function(event) {
+    function (event) {
 
       seekTrack(
         event,
@@ -353,6 +638,7 @@ function setupSeekBar(id) {
 
     }
   );
+
 }
 
 
@@ -361,293 +647,442 @@ function setupSeekBar(id) {
 ========================================================= */
 
 /*
-  YouTube automatically calls this function after
-  https://www.youtube.com/iframe_api has loaded.
-*/
+   IMPORTANT:
+
+   index.html loads:
+
+   script.js
+
+   THEN:
+
+   youtube iframe API
+
+   When YouTube finishes loading,
+   it automatically calls:
+
+   window.onYouTubeIframeAPIReady()
+========================================================= */
 
 window.onYouTubeIframeAPIReady =
-  function() {
+  function () {
 
     console.log(
       "MEHFIL: YouTube API loaded"
     );
 
 
-    player =
-      new YT.Player(
-        "youtube-player",
-        {
+    /* -----------------------------------------
+       CREATE PLAYER
+    ----------------------------------------- */
 
-          /*
-            Give YouTube a real player size.
-          */
+    try {
 
-          width: "320",
-          height: "180",
-
-
-          playerVars: {
+      player =
+        new YT.Player(
+          "youtube-player",
+          {
 
             /*
-              IMPORTANT:
-              Load the complete playlist.
+              Real iframe size.
             */
 
-            listType: "playlist",
+            width: "320",
 
-            list: PLAYLIST_ID,
+            height: "180",
 
 
             /*
-              Do not autoplay.
-              User clicks Play.
+              SINGLE VIDEO
+
+              No playlist here.
             */
 
-            autoplay: 0,
+            videoId:
+              VIDEO_ID,
 
 
             /*
-              YouTube controls remain available
-              inside the hidden testing player.
+              YouTube settings
             */
 
-            controls: 1,
+            playerVars: {
+
+              autoplay: 0,
+
+              controls: 1,
+
+              rel: 0,
+
+              playsinline: 1,
+
+              modestbranding: 1,
+
+              iv_load_policy: 3,
+
+              enablejsapi: 1
+
+            },
 
 
-            rel: 0,
+            /* ---------------------------------
+               EVENTS
+            --------------------------------- */
 
-            playsinline: 1,
-
-            modestbranding: 1
-
-          },
+            events: {
 
 
-          events: {
+              /* ================================
+                 READY
+              ================================= */
 
-            /* =====================================
-               PLAYER READY
-            ===================================== */
+              onReady:
+                function () {
 
-            onReady:
-              function() {
-
-                console.log(
-                  "MEHFIL: YouTube player ready"
-                );
+                  console.log(
+                    "MEHFIL: YouTube player ready"
+                  );
 
 
-                playerReady = true;
+                  playerReady =
+                    true;
 
 
-                /*
-                  Give YouTube a moment to load
-                  the first playlist item.
-                */
+                  /*
+                    Load information after
+                    YouTube has loaded metadata.
+                  */
 
-                setTimeout(
-                  function() {
+                  setTimeout(
+                    function () {
+
+                      updateTrackInfo();
+
+                      updateProgress();
+
+                    },
+                    700
+                  );
+
+                },
+
+
+              /* ================================
+                 STATE CHANGE
+              ================================= */
+
+              onStateChange:
+                function (event) {
+
+                  console.log(
+                    "MEHFIL: Player state:",
+                    event.data
+                  );
+
+
+                  /* -----------------------------
+                     PLAYING
+                  ----------------------------- */
+
+                  if (
+                    event.data ===
+                    YT.PlayerState.PLAYING
+                  ) {
+
+                    console.log(
+                      "MEHFIL: ▶ Playing"
+                    );
+
+
+                    setPlayingState(
+                      true
+                    );
+
+
+                    updateTrackInfo();
+
+
+                    startProgressTimer();
+
+                  }
+
+
+                  /* -----------------------------
+                     PAUSED
+                  ----------------------------- */
+
+                  else if (
+                    event.data ===
+                    YT.PlayerState.PAUSED
+                  ) {
+
+                    console.log(
+                      "MEHFIL: ⏸ Paused"
+                    );
+
+
+                    setPlayingState(
+                      false
+                    );
+
+
+                    stopProgressTimer();
+
+
+                    updateProgress();
+
+                  }
+
+
+                  /* -----------------------------
+                     ENDED
+                  ----------------------------- */
+
+                  else if (
+                    event.data ===
+                    YT.PlayerState.ENDED
+                  ) {
+
+                    console.log(
+                      "MEHFIL: Track ended"
+                    );
+
+
+                    setPlayingState(
+                      false
+                    );
+
+
+                    stopProgressTimer();
+
+
+                    updateProgress();
+
+                  }
+
+
+                  /* -----------------------------
+                     BUFFERING
+                  ----------------------------- */
+
+                  else if (
+                    event.data ===
+                    YT.PlayerState.BUFFERING
+                  ) {
+
+                    console.log(
+                      "MEHFIL: Buffering..."
+                    );
+
+
+                    updateTrackInfo();
+
+                  }
+
+
+                  /* -----------------------------
+                     CUED
+                  ----------------------------- */
+
+                  else if (
+                    event.data ===
+                    YT.PlayerState.CUED
+                  ) {
+
+                    console.log(
+                      "MEHFIL: Video cued"
+                    );
+
 
                     updateTrackInfo();
 
                     updateProgress();
 
-                  },
-                  500
-                );
+                  }
 
-              },
+                },
 
 
-            /* =====================================
-               PLAYER STATE
-            ===================================== */
+              /* ================================
+                 ERROR
+              ================================= */
 
-            onStateChange:
-              function(event) {
+              onError:
+                function (event) {
 
-
-                /*
-                  PLAYING
-                */
-
-                if (
-                  event.data ===
-                  YT.PlayerState.PLAYING
-                ) {
-
-                  console.log(
-                    "MEHFIL: Playing"
+                  console.error(
+                    "MEHFIL: YouTube Error:",
+                    event.data
                   );
 
 
-                  setPlayingState(
-                    true
-                  );
+                  /*
+                    Error codes:
+
+                    2   Invalid video ID
+                    5   HTML5 player error
+                    100 Video removed/private
+                    101 Embedding not allowed
+                    150 Embedding not allowed
+                  */
 
 
-                  updateTrackInfo();
+                  if (
+                    event.data === 150 ||
+                    event.data === 101
+                  ) {
+
+                    console.error(
+                      "MEHFIL: This YouTube video does not allow embedding."
+                    );
+
+                  }
 
 
-                  startProgressTimer();
+                  if (
+                    event.data === 100
+                  ) {
+
+                    console.error(
+                      "MEHFIL: Video is unavailable or private."
+                    );
+
+                  }
+
+
+                  if (
+                    event.data === 2
+                  ) {
+
+                    console.error(
+                      "MEHFIL: Invalid YouTube video ID."
+                    );
+
+                  }
 
                 }
 
-
-                /*
-                  PAUSED
-                */
-
-                else if (
-                  event.data ===
-                  YT.PlayerState.PAUSED
-                ) {
-
-                  console.log(
-                    "MEHFIL: Paused"
-                  );
-
-
-                  setPlayingState(
-                    false
-                  );
-
-
-                  stopProgressTimer();
-
-
-                  updateProgress();
-
-                }
-
-
-                /*
-                  ENDED
-                */
-
-                else if (
-                  event.data ===
-                  YT.PlayerState.ENDED
-                ) {
-
-                  console.log(
-                    "MEHFIL: Track ended"
-                  );
-
-
-                  setPlayingState(
-                    false
-                  );
-
-
-                  stopProgressTimer();
-
-
-                  updateProgress();
-
-
-                  setTimeout(
-                    updateTrackInfo,
-                    500
-                  );
-
-                }
-
-
-                /*
-                  BUFFERING
-                */
-
-                else if (
-                  event.data ===
-                  YT.PlayerState.BUFFERING
-                ) {
-
-                  updateTrackInfo();
-
-                }
-
-              },
-
-
-            /* =====================================
-               ERROR
-            ===================================== */
-
-            onError:
-              function(event) {
-
-                console.log(
-                  "MEHFIL YouTube Error:",
-                  event.data
-                );
-
-                /*
-                  YouTube error codes:
-
-                  2  = Invalid parameter
-                  5  = HTML5 player error
-                  100 = Video removed/private
-                  101 = Owner doesn't allow embedding
-                  150 = Owner doesn't allow embedding
-                */
-              }
+            }
 
           }
+        );
 
-        }
+
+    } catch (error) {
+
+      console.error(
+        "MEHFIL: Could not create YouTube player",
+        error
       );
+
+    }
 
   };
 
 
 /* =========================================================
-   BUTTON EVENTS
+   BUTTONS
 ========================================================= */
 
-$("playButton")
-  .addEventListener(
+
+/* Desktop Play */
+
+const playButton =
+  $("playButton");
+
+
+if (playButton) {
+
+  playButton.addEventListener(
     "click",
     togglePlay
   );
 
+}
 
-$("mobilePlayButton")
-  .addEventListener(
+
+/* Mobile Play */
+
+const mobilePlayButton =
+  $("mobilePlayButton");
+
+
+if (mobilePlayButton) {
+
+  mobilePlayButton.addEventListener(
     "click",
     togglePlay
   );
 
+}
 
-$("nextButton")
-  .addEventListener(
+
+/* Desktop Next */
+
+const nextButton =
+  $("nextButton");
+
+
+if (nextButton) {
+
+  nextButton.addEventListener(
     "click",
     nextTrack
   );
 
+}
 
-$("mobileNextButton")
-  .addEventListener(
+
+/* Mobile Next */
+
+const mobileNextButton =
+  $("mobileNextButton");
+
+
+if (mobileNextButton) {
+
+  mobileNextButton.addEventListener(
     "click",
     nextTrack
   );
 
+}
 
-$("prevButton")
-  .addEventListener(
+
+/* Desktop Previous */
+
+const prevButton =
+  $("prevButton");
+
+
+if (prevButton) {
+
+  prevButton.addEventListener(
     "click",
     previousTrack
   );
 
+}
 
-$("mobilePrevButton")
-  .addEventListener(
+
+/* Mobile Previous */
+
+const mobilePrevButton =
+  $("mobilePrevButton");
+
+
+if (mobilePrevButton) {
+
+  mobilePrevButton.addEventListener(
     "click",
     previousTrack
   );
 
+}
 
-/* Seek bars */
+
+/* =========================================================
+   SEEK BARS
+========================================================= */
 
 setupSeekBar(
   "progress"
@@ -664,19 +1099,33 @@ setupSeekBar(
 
 function updateClock() {
 
+  const clock =
+    $("clock");
+
+
+  if (!clock) {
+
+    return;
+
+  }
+
+
   const now =
     new Date();
 
 
-  $("clock").textContent =
+  clock.textContent =
     now.toLocaleTimeString(
       [],
       {
         hour: "2-digit",
+
         minute: "2-digit",
+
         hour12: true
       }
     );
+
 }
 
 
@@ -694,30 +1143,46 @@ setInterval(
 ========================================================= */
 
 /*
-  This is a visual number only.
-  It is NOT the real YouTube listener count.
+   Visual number only.
+   This is NOT YouTube's actual listener count.
 */
 
-const listenerCount =
-  1200 +
-  Math.floor(
-    Math.random() * 100
-  );
+const listenerElement =
+  $("listeners");
 
 
-$("listeners").textContent =
-  listenerCount.toLocaleString();
+if (listenerElement) {
+
+  const listenerCount =
+    1200 +
+    Math.floor(
+      Math.random() * 100
+    );
+
+
+  listenerElement.textContent =
+    listenerCount.toLocaleString();
+
+}
 
 
 /* =========================================================
-   PAGE LOAD LOG
+   INITIAL LOG
 ========================================================= */
 
 console.log(
-  "MEHFIL Radio initialized"
+  "===================================="
 );
 
 console.log(
-  "Playlist:",
-  PLAYLIST_ID
+  "MEHFIL RADIO INITIALIZED"
+);
+
+console.log(
+  "Video ID:",
+  VIDEO_ID
+);
+
+console.log(
+  "===================================="
 );
